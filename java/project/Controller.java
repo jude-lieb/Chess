@@ -7,13 +7,10 @@ import java.util.Scanner;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 /**
- * Jude Lieb
- * Chess game interface and engine
- * Start Date: 06/2022
- * End Date: Ongoing
- * Version 10
+ * Controller Class 
+ * JavaFX component controls and user input
+ * Initialization of game
  */
-
 public class Controller {
 	@FXML
 	GridPane grid;
@@ -22,26 +19,38 @@ public class Controller {
     @FXML
     Button exitBtn;
     @FXML
-    Button simulateBtn;
-    @FXML
     Button winLabel;
 	
-    //File names of images
+    //File names for images
     String[] names = {"blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
     		"wk.png", "bp.png","bn.png","bb.png","br.png","bq.png", "bk.png"};
     
+    //FXML Image grid
     static ImageView iViews[][] = new ImageView[8][8];
     ImageView selectedImage = new ImageView();
+    
+    //Number of potential moves for each piece
     int[] moveAmount = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
+    //Relative material values of pieces (king excluded)
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
+	
+	//Images for each of the piece types
     Image[] images = new Image[13];
-	Piece[] pieces = new Piece[13];
-    Game primary;
+    
+    //Stores potential move coordinate shifts for each type
+    Piece[] pieces = new Piece[13];
+    
+    //User piece selection mode (start square or end square)
+    boolean mode = true;
+    
+    //Start and end square coordinates
     Crd init = new Crd(0,0);
     Crd dest = new Crd(0,0);
-	boolean mode = true;
+    
+    Grid gameGrid;
+    CrdPair[] moves;
 	
-	//Main function sets up game and event handlers
+	//Sets up game and event handlers
 	public void start() throws IOException {
 		Image bak = new Image("board.png");
 
@@ -49,34 +58,42 @@ public class Controller {
 		int[] set = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 				0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 		
-		//int[] set = new int[64];
-		background.setImage(bak); //Setting background
+		//Alternate starting position configuration
+//		int[] set = new int[64];
+//		set[0] = 12;
+//		set[54] = 7;
+//		set[12] = 1;
+//		set[57] = 6;
+		
+		//Setting background
+		background.setImage(bak); 
 		winLabel.setVisible(false);
 		
-		//Change board start set here
-		
 		//User game created
-		primary = new Game(set, pieces, values);
+		gameGrid = new Grid(set, pieces, 39, 39, 6);
 		
 		//Preparing to read x and y shifts for each pieces' moves
 		File file = new File("newMoves.txt");
 		Scanner scan = new Scanner(file);
-		int readInt1;
-		int readInt2;
-		//Setting up list of piece images
-		//Creating each piece type and reading shifts
+		int readInt1, readInt2;
+		
+		//Setting up list of images (one for each piece type)
+		//Creating each piece type
+		//Reading all potential piece coordinate shifts from text file
 		for(int i = 0; i < 13; i++) { 
 			images[i] = new Image(names[i]);
 			Crd[] temp = new Crd[moveAmount[i]];
 			for(int j = 0; j < moveAmount[i]; j++) {
-				//Reading move coordinates from file
 				readInt1 = Integer.parseInt(scan.next());
 				readInt2 = Integer.parseInt(scan.next());
-				temp[j] = new Crd(readInt2, readInt1);
+				temp[j] = new Crd(readInt1, readInt2);
 			}
 			pieces[i] = new Piece(i, temp);
 		}
 		scan.close();
+		
+		//Finding legal moves in starting position
+		updateLegalMoves();
 		
 		//Setting image views for visual board
 	    int count = 0;
@@ -90,92 +107,70 @@ public class Controller {
 	    		grid.add(temp, x, y);
 	    	}
 	    }
-	    
+ 	    
+	    //Event handling for user move selections
 	    grid.setOnMouseClicked(e -> { 
-	    	//A square has been clicked. 
-	    	//Mode determines whether destination or source square is being selected
-	    	int y = ((int) Math.round(e.getY()))/80; //x coord of mouse
-			int x = ((int) Math.round(e.getX()))/80; //y coord of mouse
+	    	//A square has been clicked.
+	    	int y = ((int) Math.round(e.getY()))/80; //Getting x coord of mouse
+			int x = ((int) Math.round(e.getX()))/80; //Getting y coord of mouse
+			
+			//Changing image size to show focus
 	    	selectedImage.setFitHeight(80);
 	    	selectedImage = iViews[y][x];
 	    	
-			if(mode) {//Piece Selection
-				init = new Crd(x, y); 
-				if(primary.startSelect(init)) {
+			if(mode) { //Selecting starting square
+				init = new Crd(y, x); 
+				if(!Grid.colorCompare(gameGrid.board[init.y][init.x], gameGrid.color)) {
 					selectedImage.setFitHeight(90);
 					mode = false;
 				}
-			} else { //Destination square selection
-				dest = new Crd(x, y);
-				Crd target = new Crd((dest.x - init.x), (dest.y - init.y));
+			} else { //Selecting destination square
+				dest = new Crd(y, x);
+				CrdPair chosenMove = new CrdPair(init.y, init.x, y, x);
 				
-				if(primary.destSelect(init, dest, target)) {
-					//Player's move entered
-					primary.move(init, dest);
-					primary.colorSwap();
-					//primary.printBoard();
-					moveImage(init, dest);
-					if(!updateStatus(primary, primary.getStatus())) {
-						//Computer makes a move
-						Mv moveChoice = primary.compMove();
-						updateStatus(primary, primary.getStatus());
-						moveImage(moveChoice);
-			    		primary.colorSwap();
+				//If legal move choice, move and run computer response move
+				for(int i = 0; i < 100 && moves[i] != null; i++) {
+					if(moves[i].equals(chosenMove)) {
+						enterMove(chosenMove);
+						computerPlay();
+						updateLegalMoves();
+						break;
 					}
-				} else {
-					System.out.println("Invalid Move");
 				}
+				
 				mode = true;
 			}
 		});
-	    
-	    //Allows automatic moves to be made
-	    simulateBtn.setOnMouseClicked(e -> {
-	    	Mv selection;
-	    	for(int k = 0; k < 50; k++) {
-	    		if(updateStatus(primary, primary.getStatus())) {
-	    			break;
-	    		}
-	    		selection = primary.compMove();
-	    		moveImage(selection);
-	    		primary.colorSwap();
-	    	}
-	    });
 	}
 	
-	//Computer makes one move
-	public void simulateOne() {
-		Mv selection;
-		selection = primary.compMove();
-		moveImage(selection);
-		primary.colorSwap();
-    	updateStatus(primary, primary.getStatus());
+	public void updateLegalMoves() {
+		moves = new CrdPair[100];
+	    gameGrid.getLegalMoves(moves, gameGrid.color);
 	}
 	
-	//Check mate notification
-	public boolean updateStatus(Game game, int status ) {
-		if(status > 1) {
-			//grid.setVisible(false);
-			winLabel.setVisible(true);
-			//simulateBtn.setVisible(false);
-			//exitBtn.setVisible(false);
-			return true;
-		} 
-		return false;
+	//Entering player move choices (updating board contents)
+	public void enterMove(CrdPair move) {
+		gameGrid.move(new Move(gameGrid, move));	
+		updateImages(gameGrid);
+		gameGrid.print();
 	}
 	
-	//Moving coordinates
-	public void moveImage(Crd coord, Crd dest) {
-		iViews[dest.y][dest.x].setImage(images[primary.grid.board[dest.y][dest.x]]);
-		iViews[coord.y][coord.x].setImage(images[0]);	
+	//Entering computer move choices (updating board contents)
+	public void computerPlay() {
+		gameGrid.compMove();
+		updateImages(gameGrid);
 	}
 	
-	//Shifts piece images in grid
-	public void moveImage(Mv m) {
-		iViews[m.endY][m.endX].setImage(images[primary.grid.board[m.endY][m.endX]]);
-		iViews[m.startY][m.startX].setImage(images[0]);	
+	//Refreshing images on board using board array
+	public void updateImages(Grid gameGrid) {
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				iViews[i][j].setImage(images[gameGrid.board[i][j]]);
+			}
+		}	
 	}
 
+	//Setting up everything
 	public void initialize() throws IOException {
 		start();
 	}
