@@ -146,7 +146,13 @@ public class Grid {
 		}
 		
 		if(move.coord.extra != 0) { //En Passant capturing adjacently
-			board[move.coord.startY][move.coord.startX - move.coord.extra] = 1;
+			int set;
+			if(move.startType == 1) {
+				set = 7;
+			} else {
+				set = 1;
+			}
+			board[move.coord.startY][move.coord.startX - move.coord.extra] = set;
 		}
 		
 		//Castle status updates
