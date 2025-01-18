@@ -56,7 +56,7 @@ public class Controller {
 	
 	//Sets up game and event handlers
 	public void start() throws IOException {
-		Image bak = new Image("board.png");
+		Image bak = new Image(getClass().getResource("/images/board.png").toExternalForm());
 
 		//Default board state
 		int[] set = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -84,7 +84,9 @@ public class Controller {
 		//Creating each piece type
 		//Reading all potential piece coordinate shifts from text file
 		for(int i = 0; i < 13; i++) { 
-			images[i] = new Image(names[i]);
+			images[i] = new Image(getClass().getResource("/images/" + names[i]).toExternalForm());
+
+			//images[i] = new Image(names[i]);
 			Crd[] temp = new Crd[moveAmount[i]];
 			for(int j = 0; j < moveAmount[i]; j++) {
 				readInt1 = Integer.parseInt(scan.next());
