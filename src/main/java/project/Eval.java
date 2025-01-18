@@ -3,9 +3,7 @@ import java.util.*;
 /**
  * Eval Class
  * Scans legal move tree for high scoring moves.
- * Recursive pruning used (based on general online research)
  * Sorts moves by score and randomly breaks ties
- * Most future work here
  */
 public class Eval {
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};

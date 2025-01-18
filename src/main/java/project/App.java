@@ -3,23 +3,18 @@ package project;
  * Jude Lieb
  * Chess Game Interface and Engine
  * Version 16 
- * Start Date: 06/2022
- * Version Completion Date: 10/04/2024
+ * Project Start Date: 06/2022
  * 
  * Latest Major Changes: 
  * 1. Move Stack now implemented to allow move undoing.
  * 2. En Passant case now included.
  * 3. Underpromotion toggling is now included.
  * 
- * 50 move rule (no pawns or captures)
- * 3 reps draw
- * insufficient material draw
  */
 
 /**
  * App Class
  * Initializes parts of the JavaFX interface
- * This class is NOT original; I used this base code from a school assignment
  */
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
