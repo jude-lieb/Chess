@@ -1,0 +1,26 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    width: min(80vmin, 600px); /* Responsive: 80% of viewport min dimension, max 600px */
+    height: min(80vmin, 600px);
+    gap: 0px;
+    background-image: url("/images/board.png");
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+
+.grid-item {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

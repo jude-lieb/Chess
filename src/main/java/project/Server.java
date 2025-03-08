@@ -39,6 +39,6 @@ public class Server extends WebSocketServer {
     public static void main(String[] args) {
         Server server = new Server(3000);
         server.start();
-        System.out.println("Server started on ws://localhost:3000");
+        System.out.println("Server running on localhost:3000");
     }
 }
