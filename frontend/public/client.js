@@ -17,12 +17,15 @@ socket.onclose = () => {
     console.log("WebSocket connection closed.")
 }
 
-const grid = document.querySelector('.grid-container');
+const grid = document.querySelector('#board');
 
 for (let i = 0; i < 64; i++) {
     const img = document.createElement('img');
     img.src = "/images/blank.jpg";
     img.className = "grid-item";
+    img.onclick = () => {
+        socket.send("sup")
+    }
     grid.appendChild(img);
 }
 
