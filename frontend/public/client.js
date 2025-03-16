@@ -23,8 +23,10 @@ for (let i = 0; i < 64; i++) {
     const img = document.createElement('img');
     img.src = "/images/blank.jpg";
     img.className = "grid-item";
+    img.row = Math.floor(i / 8)
+    img.col = i % 8
     img.onclick = () => {
-        socket.send("sup")
+        socket.send("sup" + img.row + " " + img.col)
     }
     grid.appendChild(img);
 }
