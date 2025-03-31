@@ -48,20 +48,25 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        System.out.println("Received: " + message);
+        //System.out.println("Received: " + message);
 
-		JSONArray values = new JSONArray(message);
+		JSONObject json = new JSONObject(message);
+		String desc = json.getString("desc");
+		System.out.println("desc: " + desc);
+
+		//Determine purpose of the message using description
+		
+		JSONArray values = json.getJSONArray("crd");
 		int firstValue = values.getInt(0);
 		int secondValue = values.getInt(1);
-		System.out.println("First Value: " + firstValue);
-		System.out.println("Second Value: " + secondValue);
+		handleCrdInput(firstValue, secondValue, conn);
+		
+		// JSONObject response = new JSONObject();
+		// response.put("desc", "text");
+		// response.put("info", message);
 
-		JSONObject response = new JSONObject();
-		response.put("desc", "text");
-		response.put("info", message);
-
-		String jsonString = response.toString();
-		conn.send(jsonString);
+		// String jsonString = response.toString();
+		// conn.send(jsonString);
     }
 
     @Override
@@ -85,6 +90,45 @@ public class Server extends WebSocketServer {
         server.start();
         System.out.println("Server running on localhost:3000");
     }
+
+	public void handleCommand(String desc) {
+
+	}
+
+	public void handleCrdInput(int y, int x, WebSocket conn) {
+		System.out.println("X crd: " + y);
+		System.out.println("Y crd: " + x);
+
+		//set image to default size	
+		toggleSelect(init.y, init.x, false, conn);
+		
+		if(mode) { //Selecting starting square
+			init = new Crd(y, x); 
+			if(!Grid.colorCompare(gameGrid.board[init.y][init.x], gameGrid.color)) {
+				//set image to larger size or highlight it
+				mode = false;
+				toggleSelect(y, x, true, conn);
+				
+			}
+		} else { //Selecting destination square
+			dest = new Crd(y, x);
+			CrdPair chosenMove = new CrdPair(init.y, init.x, y, x);
+			
+			//If legal move choice, move and run computer response move
+			for(int i = 0; i < 100 && moves[i] != null; i++) {
+				if(moves[i].equals(chosenMove)) {
+					enterMove(moves[i]);
+					//computerPlay();
+					updateLegalMoves();
+					gameGrid.print();
+					sendBoard(conn);
+					break;
+				}
+			}
+			
+			mode = true;
+		}
+	}
 
 	public void initial() {
         //User game created
@@ -119,31 +163,37 @@ public class Server extends WebSocketServer {
 		}
 		//Finding legal moves in starting position
 		updateLegalMoves();
-		
-		//Setting image views for visual board
-	    int count = 0;
-	    for(int y = 0; y < 8; y++) {
-	    	for(int x = 0; x < 8; x++, count++) {
-	    		//ImageView temp = new ImageView(images[set[count]]);
-	    		//grid.getChildren().removeAll();
-	    		//iViews[y][x] = temp;
-	    		//temp.setFitHeight(80);
-	    		//temp.setPreserveRatio(true);
-	    		//grid.add(temp, x, y);
-	    	}
-	    }
 	}
 
 	public void sendBoard(WebSocket conn) {
 		JSONArray boardState = new JSONArray();
-		for (int i = 0; i <= 63; i++) {
-			boardState.put(set[i]);
+		for (int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				boardState.put(gameGrid.board[i][j]);
+			}
 		}
 
 		JSONObject message = new JSONObject();
 		message.put("desc", "boardState");
 		message.put("squares", boardState);
 
+		String jsonString = message.toString();
+		conn.send(jsonString);
+	}
+
+	public void toggleSelect(int y, int x, boolean status, WebSocket conn) {
+		JSONArray crd = new JSONArray();
+		crd.put(y);
+		crd.put(x);
+		
+		JSONObject message = new JSONObject();
+		
+		if(status) {
+			message.put("desc", "select");
+		} else {
+			message.put("desc", "deselect");
+		}
+		message.put("square", crd);
 		String jsonString = message.toString();
 		conn.send(jsonString);
 	}

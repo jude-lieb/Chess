@@ -32,6 +32,9 @@ function handleJSON(data) {
     if(data.desc === "boardState" && game === "new") {
         loadBoard(data.squares)
     }
+    if(data.desc === "select") {
+        
+    }
     if(data.desc === "text") {
         console.log(data.info)
     }
@@ -50,7 +53,7 @@ for (let i = 0; i < 64; i++) {
     img.row = Math.floor(i / 8)
     img.col = i % 8
     img.onclick = () => {
-        socket.send(JSON.stringify([img.row, img.col]));
+        socket.send(JSON.stringify({desc: "coordinate" , crd: [img.row, img.col]}));
     }
     grid.appendChild(img);
 }
