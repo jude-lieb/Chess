@@ -52,7 +52,7 @@ public class Server extends WebSocketServer {
 
 		JSONObject json = new JSONObject(message);
 		String desc = json.getString("desc");
-		System.out.println("desc: " + desc);
+		//System.out.println("desc: " + desc);
 
 		//Determine purpose of the message using description
 		
@@ -96,10 +96,7 @@ public class Server extends WebSocketServer {
 	}
 
 	public void handleCrdInput(int y, int x, WebSocket conn) {
-		System.out.println("X crd: " + y);
-		System.out.println("Y crd: " + x);
-
-		//set image to default size	
+		//remove image highlighting
 		toggleSelect(init.y, init.x, false, conn);
 		
 		if(mode) { //Selecting starting square
