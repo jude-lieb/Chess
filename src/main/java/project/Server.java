@@ -102,10 +102,11 @@ public class Server extends WebSocketServer {
 		if(mode) { //Selecting starting square
 			init = new Crd(y, x); 
 			if(!Grid.colorCompare(gameGrid.board[init.y][init.x], gameGrid.color)) {
-				//set image to larger size or highlight it
-				mode = false;
-				toggleSelect(y, x, true, conn);
-				
+				if(gameGrid.board[init.y][init.x] != 0) {
+					//set image to larger size or highlight it
+					mode = false;
+					toggleSelect(y, x, true, conn);
+				}	
 			}
 		} else { //Selecting destination square
 			dest = new Crd(y, x);
@@ -195,7 +196,6 @@ public class Server extends WebSocketServer {
 		conn.send(jsonString);
 	}
 
-
     public void updateLegalMoves() {
 		moves = new CrdPair[100];
 	    gameGrid.getLegalMoves(moves, gameGrid.color);
@@ -203,28 +203,16 @@ public class Server extends WebSocketServer {
 	
 	//Entering player move choices (updating board contents)
 	public void enterMove(CrdPair move) {
-		gameGrid.move(new Move(gameGrid, move));	
-		updateImages(gameGrid);
+		gameGrid.move(new Move(gameGrid, move));
 	}
 	
 	//Entering computer move choices (updating board contents)
 	public void computerPlay() {
 		gameGrid.compMove();
-		updateImages(gameGrid);
-	}
-	
-	//Refreshing images on board using board array
-	public void updateImages(Grid gameGrid) {
-		for(int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				//iViews[i][j].setImage(images[gameGrid.board[i][j]]);
-			}
-		}	
 	}
 
 	public void undo() {
 		gameGrid.undoMove();
-		updateImages(gameGrid);
 		updateLegalMoves();
 		gameGrid.print();
 	}
@@ -235,7 +223,6 @@ public class Server extends WebSocketServer {
 		} else {
 			gameGrid.promote = 2;
 		}
-		//changeBtn.setText("Promote " + gameGrid.promote);
 	}
 	
 	public void exit() {

@@ -13,10 +13,10 @@ socket.onopen = () => {
 socket.onmessage = (event) => {
     try {
         const jsonData = JSON.parse(event.data);
-        console.log("Received JSON:", jsonData);
+        //console.log("Received JSON:", jsonData);
         handleJSON(jsonData)
     } catch (error) {
-        console.log("Error");
+        console.log("Error handling server input");
     }
 }
 
@@ -33,7 +33,10 @@ function handleJSON(data) {
         loadBoard(data.squares)
     }
     if(data.desc === "select") {
-        
+        grid.children[(8 * data.square[0]) + data.square[1]].classList.add('red-outline')
+    }
+    if(data.desc === "deselect") {
+        grid.children[(8 * data.square[0]) + data.square[1]].classList.remove('red-outline')
     }
     if(data.desc === "text") {
         console.log(data.info)
