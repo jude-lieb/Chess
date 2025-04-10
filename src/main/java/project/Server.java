@@ -48,23 +48,22 @@ public class Server extends WebSocketServer {
 
     @Override
     public void onMessage(WebSocket conn, String message) {
-        //System.out.println("Received: " + message);
-
 		JSONObject json = new JSONObject(message);
 		String desc = json.getString("desc");
-		//System.out.println("desc: " + desc);
 
 		//Determine purpose of the message using description
-		
-		JSONArray values = json.getJSONArray("crd");
-		int firstValue = values.getInt(0);
-		int secondValue = values.getInt(1);
-		handleCrdInput(firstValue, secondValue, conn);
+		if(desc.equals("coordinate")) {
+			JSONArray values = json.getJSONArray("crd");
+			int firstValue = values.getInt(0);
+			int secondValue = values.getInt(1);
+			handleCrdInput(firstValue, secondValue, conn);
+		} else {
+			handleCommand(json.getString("change"));
+		}
 		
 		// JSONObject response = new JSONObject();
 		// response.put("desc", "text");
 		// response.put("info", message);
-
 		// String jsonString = response.toString();
 		// conn.send(jsonString);
     }
@@ -91,8 +90,14 @@ public class Server extends WebSocketServer {
         System.out.println("Server running on localhost:3000");
     }
 
-	public void handleCommand(String desc) {
-
+	public void handleCommand(String change) {
+		if(change.equals("undo")) {
+			undo();
+		} else if(change.equals("promote")) {
+			changePromotion();
+		} else if(change.equals("reset")) {
+			
+		}
 	}
 
 	public void handleCrdInput(int y, int x, WebSocket conn) {
@@ -156,8 +161,7 @@ public class Server extends WebSocketServer {
 			}
 			scan.close();
 		} catch (FileNotFoundException e) {
-			System.out.println("error");
-			System.exit(0);
+			System.out.println("File Error");
 		}
 		//Finding legal moves in starting position
 		updateLegalMoves();
