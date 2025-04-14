@@ -37,6 +37,7 @@ public class Server extends WebSocketServer {
 		String desc = json.getString("desc");
 		System.out.println("Message Received");
 		System.out.println(desc);
+
 		//Determine purpose of the message using description
 		if(desc.equals("coordinate")) {
 			JSONArray values = json.getJSONArray("crd");
@@ -60,8 +61,8 @@ public class Server extends WebSocketServer {
     }
 
     @Override
-    public void onError(WebSocket conn, Exception ex) {
-        System.err.println("Error: " + ex.getMessage());
+    public void onError(WebSocket conn, Exception e) {
+        System.err.println("Error: " + e.getMessage());
     }
 
     public static void main(String[] args) {

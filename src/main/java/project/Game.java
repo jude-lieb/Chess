@@ -24,33 +24,26 @@ public class Game {
     Piece[] pieces = new Piece[13];
     
     //User piece selection mode (start square or end square)
-    boolean mode = true;
+    boolean mode;
     
     //Start and end square coordinates
-    Crd init = new Crd(0,0);
-    Crd dest = new Crd(0,0);
+    Crd init;
+    Crd dest;
     
     Grid gameGrid;
     CrdPair[] moves;
 
     public Game() {
-        //User game created
-        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
-        
         //Preparing to read x and y shifts for each pieces' moves
         File file = new File("newMoves.txt");
 
 		try {
 			Scanner scan = new Scanner(file);
 			int readInt1, readInt2;
-			
-			//Setting up list of images (one for each piece type)
+
 			//Creating each piece type
 			//Reading all potential piece coordinate shifts from text file
 			for(int i = 0; i < 13; i++) { 
-				//images[i] = new Image(getClass().getResource("/images/" + names[i]).toExternalForm());
-
-				//images[i] = new Image(names[i]);
 				Crd[] temp = new Crd[moveAmount[i]];
 				for(int j = 0; j < moveAmount[i]; j++) {
 					readInt1 = Integer.parseInt(scan.next());
@@ -63,8 +56,19 @@ public class Game {
 		} catch (FileNotFoundException e) {
 			System.out.println("File Error");
 		}
-		//Finding legal moves in starting position
-		updateLegalMoves();
+
+		reset();
+    }
+
+    public void reset() {
+        mode = true;
+        init = new Crd(0,0);
+        dest = new Crd(0,0);
+
+        //User game created
+        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
+        //Finding legal moves in starting position
+        updateLegalMoves();
     }
 
 	public void handleCommand(String desc, WebSocket conn) {
@@ -75,7 +79,9 @@ public class Game {
 			changePromotion();
 			sendPromote(conn);
 		} else if(desc.equals("reset")) {
-			
+			reset();
+            sendBoard(conn);
+            sendPromote(conn);
 		}
 	}
 
