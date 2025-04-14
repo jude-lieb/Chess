@@ -62,12 +62,6 @@ public class Server extends WebSocketServer {
 		} else {
 			handleCommand(desc, conn);
 		}
-		
-		// JSONObject response = new JSONObject();
-		// response.put("desc", "text");
-		// response.put("info", message);
-		// String jsonString = response.toString();
-		// conn.send(jsonString);
     }
 
     @Override
