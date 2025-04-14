@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://localhost:3000")
+const socket = new WebSocket("ws://localhost:3002")
 const grid = document.querySelector('#board');
 
 const images = ["blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
@@ -12,10 +12,11 @@ socket.onopen = () => {
 socket.onmessage = (event) => {
     try {
         const jsonData = JSON.parse(event.data);
-        //console.log("Received JSON:", jsonData);
+        console.log("Received JSON:", jsonData);
         handleJSON(jsonData)
     } catch (error) {
         console.log("Error handling server input");
+        console.log(event);
     }
 }
 
@@ -35,7 +36,7 @@ function promote() {
     socket.send(JSON.stringify({desc: "promote"}));
 }
 
-function resetGame() {
+function reset() {
     socket.send(JSON.stringify({desc: "reset"}));
 }
 
