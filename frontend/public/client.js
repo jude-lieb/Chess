@@ -1,5 +1,4 @@
 const socket = new WebSocket("ws://localhost:3000")
-let game = "new"
 const grid = document.querySelector('#board');
 
 const images = ["blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
@@ -28,8 +27,20 @@ socket.onclose = () => {
     console.log("WebSocket connection closed.")
 }
 
+function undo() {
+    socket.send(JSON.stringify({desc: "undo"}));
+}
+
+function promote() {
+    socket.send(JSON.stringify({desc: "promote"}));
+}
+
+function resetGame() {
+    socket.send(JSON.stringify({desc: "reset"}));
+}
+
 function handleJSON(data) {
-    if(data.desc === "boardState" && game === "new") {
+    if(data.desc === "boardState") {
         loadBoard(data.squares)
     }
     if(data.desc === "select") {
@@ -40,6 +51,9 @@ function handleJSON(data) {
     }
     if(data.desc === "text") {
         console.log(data.info)
+    }
+    if(data.desc === "promote") {
+        document.getElementById('promoteBtn').innerHTML = `Promote Toggle ${data.value}`
     }
 }
 

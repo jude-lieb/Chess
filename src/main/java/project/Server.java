@@ -44,13 +44,15 @@ public class Server extends WebSocketServer {
     public void onOpen(WebSocket conn, ClientHandshake handshake) {
         System.out.println("New connection: " + conn.getRemoteSocketAddress());
 		sendBoard(conn);
+		sendPromote(conn);
     }
 
     @Override
     public void onMessage(WebSocket conn, String message) {
 		JSONObject json = new JSONObject(message);
 		String desc = json.getString("desc");
-
+		System.out.println("Message Received");
+		System.out.println(desc);
 		//Determine purpose of the message using description
 		if(desc.equals("coordinate")) {
 			JSONArray values = json.getJSONArray("crd");
@@ -58,7 +60,7 @@ public class Server extends WebSocketServer {
 			int secondValue = values.getInt(1);
 			handleCrdInput(firstValue, secondValue, conn);
 		} else {
-			handleCommand(json.getString("change"));
+			handleCommand(desc, conn);
 		}
 		
 		// JSONObject response = new JSONObject();
@@ -90,12 +92,14 @@ public class Server extends WebSocketServer {
         System.out.println("Server running on localhost:3000");
     }
 
-	public void handleCommand(String change) {
-		if(change.equals("undo")) {
+	public void handleCommand(String desc, WebSocket conn) {
+		if(desc.equals("undo")) {
 			undo();
-		} else if(change.equals("promote")) {
+			sendBoard(conn);
+		} else if(desc.equals("promote")) {
 			changePromotion();
-		} else if(change.equals("reset")) {
+			sendPromote(conn);
+		} else if(desc.equals("reset")) {
 			
 		}
 	}
@@ -121,7 +125,8 @@ public class Server extends WebSocketServer {
 			for(int i = 0; i < 100 && moves[i] != null; i++) {
 				if(moves[i].equals(chosenMove)) {
 					enterMove(moves[i]);
-					//computerPlay();
+					sendBoard(conn);
+					computerPlay();
 					updateLegalMoves();
 					gameGrid.print();
 					sendBoard(conn);
@@ -167,6 +172,14 @@ public class Server extends WebSocketServer {
 		updateLegalMoves();
 	}
 
+	public void sendPromote(WebSocket conn) {
+		JSONObject message = new JSONObject();
+		message.put("desc", "promote");
+		message.put("value", gameGrid.promote);
+		String jsonString = message.toString();
+		conn.send(jsonString);
+	}
+
 	public void sendBoard(WebSocket conn) {
 		JSONArray boardState = new JSONArray();
 		for (int i = 0; i < 8; i++) {
@@ -178,6 +191,7 @@ public class Server extends WebSocketServer {
 		JSONObject message = new JSONObject();
 		message.put("desc", "boardState");
 		message.put("squares", boardState);
+		message.put("value", gameGrid.promote);
 
 		String jsonString = message.toString();
 		conn.send(jsonString);

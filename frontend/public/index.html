@@ -10,13 +10,24 @@
 </head>
 <body>
 
-    <div id="board" class="grid-container">
-        
-    </div>
+    <div class="container d-flex justify-content-center mt-4">
+        <div class="d-flex flex-column flex-md-row align-items-start gap-4">
+            
+            <!-- Chess Board -->
+            <div id="board" class="grid-container">
+                <!-- Squares rendered by JS -->
+            </div>
 
-    <button class="btn btn-primary">Undo Move</button>
-    <button class="btn btn-primary">Reset Game</button>
-    <button class="btn btn-primary">Promote Toggle</button>
+            <!-- Control Buttons -->
+            <div class="d-flex flex-column gap-3">
+                <button onclick="undo()" class="btn btn-primary w-100">Undo Move</button>
+                <button onclick="reset()" class="btn btn-primary w-100">Reset Game</button>
+                <button onclick="promote()" id="promoteBtn" class="btn btn-primary w-100">Promote Toggle</button>
+                <p id="message"></p>
+            </div>
+
+        </div>
+    </div>
 
 </body>
 </html>
