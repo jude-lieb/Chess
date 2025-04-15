@@ -1,21 +1,28 @@
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 const WebSocket = require("ws");
-const http = require("http");
+const https = require("https");
 
 const app = express();
-const port = 3002;
+const port = 443;
 const BACKEND_WS_URL = "ws://localhost:3000"; // Your Java server
+
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/judelieb.com/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate };
 
 // Serve static files from public/
 app.use(express.static(path.join(__dirname, "public")));
 
-//const privateKey = fs.readFileSync('/etc/letsencrypt/live/judelieb.com/privkey.pem', 'utf8');
-//const certificate = fs.readFileSync('/etc/letsencrypt/live/judelieb.com/fullchain.pem', 'utf8');
-//const credentials = { key: privateKey, cert: certificate };
-
 // Create and start HTTP server
-const server = http.createServer(app);
+const server = https.createServer(credentials, app);
 
 server.listen(port, () => {
   console.log(`Live at http://localhost:${port}`);
@@ -33,7 +40,7 @@ wss.on("connection", (clientSocket) => {
   // Optional: queue messages while backend is connecting
   const queuedMessages = [];
 
-  // === FORWARD: client ➡️ backend ===
+  // === FORWARD: client backend ===
   clientSocket.on("message", (message) => {
     const msgStr = message.toString();
     if (backendSocket.readyState === WebSocket.OPEN) {
