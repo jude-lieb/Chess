@@ -1,4 +1,4 @@
-const socket = new WebSocket("ws://judelieb.com:3002")
+const socket = new WebSocket("wss://judelieb.com:3002")
 const grid = document.querySelector('#board');
 
 const images = ["blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
@@ -6,7 +6,6 @@ const images = ["blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
 
 socket.onopen = () => {
     console.log("Connected to Java WebSocket!")
-    //socket.send("Test Move")
 };
 
 socket.onmessage = (event) => {

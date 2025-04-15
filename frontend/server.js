@@ -10,8 +10,13 @@ const BACKEND_WS_URL = 'ws://localhost:3000'; // Your Java server
 // Serve static files from public/
 app.use(express.static(path.join(__dirname, "public")));
 
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/judelieb.com/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/judelieb.com/fullchain.pem', 'utf8');
+const credentials = { key: privateKey, cert: certificate };
+
 // Create and start HTTP server
 const server = http.createServer(app);
+
 server.listen(port, () => {
     console.log(`Live at http://localhost:${port}`);
 });
