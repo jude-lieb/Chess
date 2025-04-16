@@ -24,7 +24,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // Create and start HTTP server
 const server = https.createServer(credentials, app);
 
-server.listen(port, "0.0.0.0", () => {
+server.listen(port, () => {
   console.log(`Live at https://localhost:${port}`);
 });
 
