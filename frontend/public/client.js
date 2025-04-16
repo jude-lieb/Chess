@@ -29,6 +29,12 @@ socket.onclose = () => {
   console.log("WebSocket connection closed.");
 };
 
+setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ desc: "ping" }));
+    }
+}, 60000);
+
 function undo() {
   socket.send(JSON.stringify({ desc: "undo" }));
 }
