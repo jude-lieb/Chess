@@ -2,19 +2,8 @@ const socket = new WebSocket("wss://judelieb.com");
 const grid = document.querySelector("#board");
 
 const images = [
-  "blank.jpg",
-  "wp.png",
-  "wn.png",
-  "wb.png",
-  "wr.png",
-  "wq.png",
-  "wk.png",
-  "bp.png",
-  "bn.png",
-  "bb.png",
-  "br.png",
-  "bq.png",
-  "bk.png",
+  "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
+  "bp.png","bn.png","bb.png","br.png","bq.png","bk.png",
 ];
 
 socket.onopen = () => {
@@ -39,6 +28,12 @@ socket.onerror = (error) => {
 socket.onclose = () => {
   console.log("WebSocket connection closed.");
 };
+
+setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ desc: "ping" }));
+    }
+}, 60000);
 
 function undo() {
   socket.send(JSON.stringify({ desc: "undo" }));
