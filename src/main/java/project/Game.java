@@ -109,7 +109,7 @@ public class Game {
 					sendBoard(conn);
 					computerPlay();
 					updateLegalMoves();
-					gameGrid.print();
+					//gameGrid.print();
 					sendBoard(conn);
 					break;
 				}
@@ -179,7 +179,7 @@ public class Game {
 	public void undo() {
 		gameGrid.undoMove();
 		updateLegalMoves();
-		gameGrid.print();
+		//gameGrid.print();
 	}
 	
 	public void changePromotion() {
