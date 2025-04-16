@@ -513,17 +513,17 @@ public class Grid {
 	
 	//Displaying integer representation of board and material totals
 	public void print() {
-		for(int i = 0; i < 8; i++) {
-			System.out.println();
-			for(int j = 0; j < 8; j++) {
-				if(board[i][j] != 0) {
-					System.out.printf("%-2s ", board[i][j]);
-				} else {
-					System.out.printf("%-2s ", "_");
-				}
-			}
-		}
-		System.out.println("wMat: " + wMat + " bMat: "+ bMat);
+		// for(int i = 0; i < 8; i++) {
+		// 	System.out.println();
+		// 	for(int j = 0; j < 8; j++) {
+		// 		if(board[i][j] != 0) {
+		// 			System.out.printf("%-2s ", board[i][j]);
+		// 		} else {
+		// 			System.out.printf("%-2s ", "_");
+		// 		}
+		// 	}
+		// }
+		// System.out.println("wMat: " + wMat + " bMat: "+ bMat);
 	}
 	
 	//Based on an online resource's array copier
