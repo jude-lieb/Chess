@@ -31,7 +31,6 @@ public class Game {
     Crd dest;
     
     Grid gameGrid;
-    CrdPair[] moves;
 
     public Game() {
         //Preparing to read x and y shifts for each pieces' moves
@@ -60,20 +59,9 @@ public class Game {
 		reset();
     }
 
-    public void reset() {
-        mode = true;
-        init = new Crd(0,0);
-        dest = new Crd(0,0);
-
-        //User game created
-        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
-        //Finding legal moves in starting position
-        updateLegalMoves();
-    }
-
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
-			undo();
+			gameGrid.undoMove();
 			sendBoard(conn);
 		} else if(desc.equals("promote")) {
 			changePromotion();
@@ -102,17 +90,20 @@ public class Game {
 			dest = new Crd(y, x);
 			CrdPair chosenMove = new CrdPair(init.y, init.x, y, x);
 			
-			//If legal move choice, move and run computer response move
-			for(int i = 0; i < 100 && moves[i] != null; i++) {
-				if(moves[i].equals(chosenMove)) {
-					enterMove(moves[i]);
-					sendBoard(conn);
-					computerPlay();
-					updateLegalMoves();
-					//gameGrid.print();
-					sendBoard(conn);
-					break;
-				}
+			CrdPair result = gameGrid.isLegal(chosenMove);
+			if(result != null) {
+				//Player move
+				gameGrid.move(new Move(gameGrid, result));
+				sendBoard(conn);
+				gameGrid.findLegalMoves();
+				handleStatus(gameGrid.status());
+				
+				//Computer move response
+				gameGrid.compMove();
+				sendBoard(conn);
+				gameGrid.findLegalMoves();
+				handleStatus(gameGrid.status());
+				//gameGrid.print();
 			}
 			
 			mode = true;
@@ -161,26 +152,24 @@ public class Game {
 		conn.send(jsonString);
 	}
 
-    public void updateLegalMoves() {
-		moves = new CrdPair[100];
-	    gameGrid.getLegalMoves(moves, gameGrid.color);
-	}
-	
-	//Entering player move choices (updating board contents)
-	public void enterMove(CrdPair move) {
-		gameGrid.move(new Move(gameGrid, move));
-	}
-	
-	//Entering computer move choices (updating board contents)
-	public void computerPlay() {
-		gameGrid.compMove();
+	public void handleStatus(int status) {
+		if(status != 0) {
+			if(status == 1) {
+				System.out.println("Stalemate Detected");
+			} else {
+				System.out.println("Checkmate Detected");
+			}
+		}
 	}
 
-	public void undo() {
-		gameGrid.undoMove();
-		updateLegalMoves();
-		//gameGrid.print();
-	}
+	public void reset() {
+        mode = true;
+        init = new Crd(0,0);
+        dest = new Crd(0,0);
+
+        //User game created
+        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
+    }
 	
 	public void changePromotion() {
 		if(gameGrid.promote < 5) {

@@ -7,9 +7,11 @@ package project;
  */
 public class Move {
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
+	CrdPair[] moves;
 	int startType, endType, matChange, promote;
 	int special;
 	int color;
+	int legalMoveCount;
 	CrdPair coord;
 	boolean wK;
 	boolean wQ;
@@ -22,6 +24,8 @@ public class Move {
 		coord = moveCrd;
 		startType = grid.board[moveCrd.startY][moveCrd.startX];
 		endType = grid.board[moveCrd.endY][moveCrd.endX];
+		moves = grid.moves;
+		legalMoveCount = grid.legalMoveCount;
 		matChange = 0;
 		color = grid.color;
 		special = 0;

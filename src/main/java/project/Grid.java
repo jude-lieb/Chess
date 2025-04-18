@@ -11,7 +11,9 @@ public class Grid {
 	int[][] board;
 	MoveStack prevMoves;
 	Piece[] pieces;
+	CrdPair[] moves;
 	int[] values = {0,1,3,3,5,9,0,1,3,3,5,9,0};
+	int legalMoveCount;
 	int color;
 	int promote;
 	int bMat;
@@ -20,21 +22,6 @@ public class Grid {
 	boolean wK;
 	boolean bQ;
 	boolean wQ;
-	
-	//Copy constructor
-	public Grid(int[][] board, Piece[] pieces, int wMat, int bMat, int color, int promote) {
-		this.pieces = pieces;
-		this.board = board.clone();
-		prevMoves = new MoveStack();
-		this.bMat = bMat;
-		this.wMat = wMat;
-		this.color = color;
-		this.promote = promote;
-		bK = false;
-		wK = false;
-		bQ = false;
-		wQ = false;
-	}
 	
 	//Initializing
 	public Grid(int[] set, Piece[] pieces, int wMat, int bMat, int startColor, int promote) {
@@ -57,17 +44,43 @@ public class Grid {
 		wK = false;
 		bQ = false;
 		wQ = false;
+		findLegalMoves();
+		System.out.println("legal move count " + legalMoveCount);
+	}
+
+	public CrdPair isLegal(CrdPair chosenMove) {
+		for(int i = 0; i < 100 && moves[i] != null; i++) {
+			if(moves[i].equals(chosenMove)) {
+				return moves[i];
+			}
+		}
+		return null;
+	}
+
+	public int status() {
+		if(legalMoveCount == 0) {
+			if(inCheck(color)) { //Checkmate
+				return 2;
+			} else { //Stalemate
+				return 1; 
+			}
+		} else { //Legal moves available
+			return 0;
+		}
 	}
 	
 	//Calls evaluation method and makes automatic move
-	public void compMove() {		
-		Eval ev = new Eval();
-		CrdPair result = ev.getBestMove(this, color);
-		if(result != null) {
-			move(new Move(this, result));
-		} else {
-			System.exit(0);
+	public void compMove() {	
+		if(legalMoveCount == 0) {
+			System.out.println("Computer cannot move.");
+			return;
 		}
+
+		Eval ev = new Eval();
+		ev.getBestMove(this);
+		System.out.println("Best Move: ");
+		System.out.println(this.moves[0]);
+		move(new Move(this, this.moves[0]));
 	}
 
 	//Gets a material difference to be used in Eval scoring
@@ -173,6 +186,9 @@ public class Grid {
 		//Moving integer type values in board
 		board[move.coord.endY][move.coord.endX] = move.endType;
 		board[move.coord.startY][move.coord.startX] = move.startType;
+
+		legalMoveCount = move.legalMoveCount;
+		moves = move.moves;
 		colorSwap();
 	}
 	
@@ -213,20 +229,19 @@ public class Grid {
 		
 		return index;
 	}
-	
 
-	//Returns whether the given color is in checkmate (no legal moves and in check)
-	public boolean checkMate(int color) {
-		return getLegalMoves(null, color) > 0;
+	public void updateStatus() {
+
 	}
-	
+
 	//Checks whether a given coordinate is within board limits
 	public boolean inBounds(Crd dest) {
 		return (dest.y < 8 && dest.y > -1) && (dest.x < 8 && dest.x > -1);
 	}
 	
-	//Returns the number of legal moves and saves them in parameter array
-	public int getLegalMoves(CrdPair[] list, int color) {
+	//Updating the list of legal moves in the position
+	public void findLegalMoves() {
+		CrdPair[] list = new CrdPair[100];
 		int count = canCastle(list, color);
 		count = canEnPassant(list, count);
 		for(int i = 0; i < 8; i++) {
@@ -242,7 +257,8 @@ public class Grid {
 				}
 			}
 		}
-		return count;
+		legalMoveCount = count;
+		moves = list;
 	}
 	
 	public int canCastle(CrdPair[] list, int color) {
@@ -524,15 +540,5 @@ public class Grid {
 		// 	}
 		// }
 		// System.out.println("wMat: " + wMat + " bMat: "+ bMat);
-	}
-	
-	//Based on an online resource's array copier
-	public Grid clone() {
-		int length = board.length;
-	    int[][] boardClone = new int[length][board[0].length];
-	    for (int i = 0; i < length; i++) {
-	        System.arraycopy(board[i], 0, boardClone[i], 0, board[i].length);
-	    }
-		return new Grid(boardClone, this.pieces, wMat, bMat, color, promote);
 	}
 }
