@@ -7,7 +7,7 @@ package project;
  */
 public class Move {
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
-	CrdPair[] moves;
+	CrdPair[] moves = new CrdPair[100];
 	int startType, endType, matChange, promote;
 	int special;
 	int color;
@@ -24,12 +24,15 @@ public class Move {
 		coord = moveCrd;
 		startType = grid.board[moveCrd.startY][moveCrd.startX];
 		endType = grid.board[moveCrd.endY][moveCrd.endX];
-		moves = grid.moves;
 		legalMoveCount = grid.legalMoveCount;
 		matChange = 0;
 		color = grid.color;
 		special = 0;
-		
+
+		for(int i = 0; i < legalMoveCount; i++) {
+			moves[i] = grid.moves[i].clone();
+		}
+ 		
 		if(startType == 1 && moveCrd.endY == 0 ) {
 			matChange = values[grid.promote];
 			promote = grid.promote;

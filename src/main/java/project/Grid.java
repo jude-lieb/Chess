@@ -77,7 +77,7 @@ public class Grid {
 		}
 
 		Eval ev = new Eval();
-		ev.getBestMove(this);
+		ev.getBestMove(this, color);
 		System.out.println("Best Move: ");
 		System.out.println(this.moves[0]);
 		move(new Move(this, this.moves[0]));
@@ -189,7 +189,8 @@ public class Grid {
 
 		legalMoveCount = move.legalMoveCount;
 		moves = move.moves;
-		colorSwap();
+		//System.out.println("Undo Color " + move.color);
+		color = move.color;
 	}
 	
 	public int canEnPassant(CrdPair[] list, int count) {
@@ -201,7 +202,6 @@ public class Grid {
 		
 		int shift = Math.abs(prev.coord.getY());
 		
-		//System.out.println(prev.startType + " " + (prev.color - 5) + " " + shift);
 		if(prev.startType == prev.color - 5 && shift == 2) {
 			int x1 = prev.coord.endX - 1;
 			int x2 = prev.coord.endX + 1;
@@ -228,10 +228,6 @@ public class Grid {
 		}
 		
 		return index;
-	}
-
-	public void updateStatus() {
-
 	}
 
 	//Checks whether a given coordinate is within board limits
@@ -263,8 +259,6 @@ public class Grid {
 	
 	public int canCastle(CrdPair[] list, int color) {
 		int number = 0;
-		//System.out.println("Status " + wK + wQ + bQ + bK);
-		
 		if(inCheck(color)) {
 			return 0;
 		}
@@ -344,7 +338,6 @@ public class Grid {
 	
 	public boolean squareAttacked(Crd coord, int color) {
 		if(!inBounds(coord)) {
-			//System.out.println("Failed out of bounds");
 			return false;
 		}
 		int type, x, y;
@@ -359,7 +352,6 @@ public class Grid {
 						if(inBounds(new Crd(y, x))) {
 							if(coord.x == x && coord.y == y) {
 								if(systemChecks(new Crd(i,q),new Crd(y, x))) {
-									//System.out.println("Failed " + coord.y + " " + coord.x);
 									return true;
 								}
 							}

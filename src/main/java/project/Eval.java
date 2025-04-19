@@ -10,36 +10,33 @@ public class Eval {
 	int totalCount = 0;
 
 	//Tree search alpha-beta pruning algorithm (roughly based on wikihow code example)
-	public int getScore(int depth, Grid current, int alpha, int beta){
+	public int getScore(int depth, Grid current, int color, int alpha, int beta){
 		//Terminating condition (currently depth 1)
 		if (depth == 2) {
 			totalCount++;
 			return current.positionEval();
 		}
-	
+
+		//Setting up move array and count
+		current.findLegalMoves();
+		int moveCount = current.legalMoveCount;
+		
 		//maximizing black score
-		if (current.color > 6){
+		if (color > 6){
 			int best = -100;
 			
-			//Setting up move array and count
-			current.findLegalMoves();
-			int moveCount = current.legalMoveCount;
-			
-
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
 				
 				if(current.moves[i] == null) {
 					System.out.println("Index " + i);
 				}
-		
 				//Moving to new position for analysis
 				Move stat = new Move(current, current.moves[i]);
 				current.move(stat);
 				
-				
 				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, current, alpha, beta);
+				int val = getScore(depth + 1, current, otherColor(color), alpha, beta);
 				current.undoMove();
 				
 				//Compare with previous scores
@@ -55,11 +52,6 @@ public class Eval {
 		} else {
 			int best = 100;
 			
-			//Setting up move array and count
-			current.findLegalMoves();
-			int moveCount = current.legalMoveCount;
-			
-			
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
 				
@@ -70,9 +62,8 @@ public class Eval {
 				Move stat = new Move(current, current.moves[i]);
 				current.move(stat);
 				
-				
 				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, current, alpha, beta);
+				int val = getScore(depth + 1, current, otherColor(color), alpha, beta);
 				current.undoMove();
 				
 				//Compare with previous scores
@@ -90,12 +81,17 @@ public class Eval {
 
 	//Gets all legal moves and generates scores for each
 	//Sorts scores to find highest and breaks ties when necessary
-	public void getBestMove(Grid grid) {
+	public void getBestMove(Grid grid, int color) {
 		int count = grid.legalMoveCount;
+		int startColor = color;
 		
 		if(count == 0) {
-			System.out.println("No legal computer moves to evaluate.");
+			System.out.println("No Legal Computer Moves.");
 			return;
+		}
+
+		if(color < 7) {
+			startColor = 12;
 		}
 		
 		double[] scores = new double[count];
@@ -104,8 +100,7 @@ public class Eval {
 		for(int i = 0; i < count; i++) {
 			Move stat = new Move(grid, grid.moves[i]);
 			grid.move(stat);
-			grid.findLegalMoves();
-			scores[i] = getScore(0, grid, -100, 100);
+			scores[i] = getScore(0, grid, otherColor(startColor), -100, 100);
 			grid.undoMove();
 		}
 		
@@ -117,7 +112,7 @@ public class Eval {
 		        temp = scores[j];
 		        tempCrdPair = grid.moves[j];
 		        scores[j] = scores[j-1];
-		        grid.moves[j] = grid.moves[j-j];
+		        grid.moves[j] = grid.moves[j-1];
 		        scores[j-1] = temp;
 		        grid.moves[j-1] = tempCrdPair;
 		    }
@@ -148,6 +143,15 @@ public class Eval {
 			CrdPair temp1 = grid.moves[0];
 			grid.moves[0] = grid.moves[index];
 			grid.moves[index] = temp1;
+		}
+	}
+	
+	//Gets opposite color
+	public static int otherColor(int color) {
+		if(color > 6) {
+			return 6;
+		} else {
+			return 12;
 		}
 	}
 }

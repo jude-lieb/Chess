@@ -63,6 +63,7 @@ public class Game {
 		if(desc.equals("undo")) {
 			gameGrid.undoMove();
 			sendBoard(conn);
+			System.out.println("Color" + gameGrid.color); 
 		} else if(desc.equals("promote")) {
 			changePromotion();
 			sendPromote(conn);
