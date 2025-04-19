@@ -77,7 +77,7 @@ public class Grid {
 		}
 
 		Eval ev = new Eval();
-		ev.getBestMove(this, color);
+		ev.getBestMove(this);
 		System.out.println("Best Move: ");
 		System.out.println(this.moves[0]);
 		move(new Move(this, this.moves[0]));

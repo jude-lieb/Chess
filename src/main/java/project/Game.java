@@ -62,8 +62,8 @@ public class Game {
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
 			gameGrid.undoMove();
+			gameGrid.undoMove();
 			sendBoard(conn);
-			System.out.println("Color" + gameGrid.color); 
 		} else if(desc.equals("promote")) {
 			changePromotion();
 			sendPromote(conn);

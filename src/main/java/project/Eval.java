@@ -10,7 +10,7 @@ public class Eval {
 	int totalCount = 0;
 
 	//Tree search alpha-beta pruning algorithm (roughly based on wikihow code example)
-	public int getScore(int depth, Grid current, int color, int alpha, int beta){
+	public int getScore(int depth, Grid current, int alpha, int beta){
 		//Terminating condition (currently depth 1)
 		if (depth == 2) {
 			totalCount++;
@@ -22,21 +22,17 @@ public class Eval {
 		int moveCount = current.legalMoveCount;
 		
 		//maximizing black score
-		if (color > 6){
+		if (current.color > 6){
 			int best = -100;
 			
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
-				
-				if(current.moves[i] == null) {
-					System.out.println("Index " + i);
-				}
 				//Moving to new position for analysis
 				Move stat = new Move(current, current.moves[i]);
 				current.move(stat);
 				
 				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, current, otherColor(color), alpha, beta);
+				int val = getScore(depth + 1, current, alpha, beta);
 				current.undoMove();
 				
 				//Compare with previous scores
@@ -54,16 +50,11 @@ public class Eval {
 			
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
-				
-				
-				if(current.moves[i] == null) {
-					System.out.println("Index " + i);
-				}
 				Move stat = new Move(current, current.moves[i]);
 				current.move(stat);
 				
 				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, current, otherColor(color), alpha, beta);
+				int val = getScore(depth + 1, current, alpha, beta);
 				current.undoMove();
 				
 				//Compare with previous scores
@@ -81,17 +72,12 @@ public class Eval {
 
 	//Gets all legal moves and generates scores for each
 	//Sorts scores to find highest and breaks ties when necessary
-	public void getBestMove(Grid grid, int color) {
+	public void getBestMove(Grid grid) {
 		int count = grid.legalMoveCount;
-		int startColor = color;
-		
+
 		if(count == 0) {
 			System.out.println("No Legal Computer Moves.");
 			return;
-		}
-
-		if(color < 7) {
-			startColor = 12;
 		}
 		
 		double[] scores = new double[count];
@@ -100,7 +86,7 @@ public class Eval {
 		for(int i = 0; i < count; i++) {
 			Move stat = new Move(grid, grid.moves[i]);
 			grid.move(stat);
-			scores[i] = getScore(0, grid, otherColor(startColor), -100, 100);
+			scores[i] = getScore(0, grid, -100, 100);
 			grid.undoMove();
 		}
 		
