@@ -6,26 +6,26 @@ const https = require("https");
 const http = require("http");
 
 const app = express();
-//const port = 443;
-const port = 3002;
+const port = 443;
+//const port = 3002;
 const BACKEND_WS_URL = "ws://localhost:3000";
 
-// const privateKey = fs.readFileSync(
-//   "/etc/letsencrypt/live/judelieb.com/privkey.pem",
-//   "utf8"
-// );
-// const certificate = fs.readFileSync(
-//   "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
-//   "utf8"
-// );
-// const credentials = { key: privateKey, cert: certificate };
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/judelieb.com/privkey.pem",
+  "utf8"
+);
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
+  "utf8"
+);
+const credentials = { key: privateKey, cert: certificate };
 
 // Serve static files from public/
 app.use(express.static(path.join(__dirname, "public")));
 
 // Create and start HTTP server
-const server = http.createServer(app);
-//const server = https.createServer(credentials, app);
+//const server = http.createServer(app);
+const server = https.createServer(credentials, app);
 
 server.listen(port, () => {
   console.log(`Live at https://localhost:${port}`);
