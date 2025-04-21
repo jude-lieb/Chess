@@ -29,9 +29,10 @@ public class Game {
     //Start and end square coordinates
     Crd init;
     Crd dest;
+	//Holding which squares need to be selected or deselected
+	Crd[] squares;
     
     Grid gameGrid;
-    CrdPair[] moves;
 
     public Game() {
         //Preparing to read x and y shifts for each pieces' moves
@@ -60,20 +61,11 @@ public class Game {
 		reset();
     }
 
-    public void reset() {
-        mode = true;
-        init = new Crd(0,0);
-        dest = new Crd(0,0);
-
-        //User game created
-        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
-        //Finding legal moves in starting position
-        updateLegalMoves();
-    }
-
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
-			undo();
+			gameGrid.undoMove();
+			gameGrid.undoMove();
+			toggleSelect(squares, false, conn);
 			sendBoard(conn);
 		} else if(desc.equals("promote")) {
 			changePromotion();
@@ -87,7 +79,9 @@ public class Game {
 
 	public void handleCrdInput(int y, int x, WebSocket conn) {
 		//remove image highlighting
-		toggleSelect(init.y, init.x, false, conn);
+		
+		//toggleSelect(init.y, init.x, false, conn);
+		toggleSelect(squares, false, conn);
 		
 		if(mode) { //Selecting starting square
 			init = new Crd(y, x); 
@@ -95,24 +89,39 @@ public class Game {
 				if(gameGrid.board[init.y][init.x] != 0) {
 					//set image to larger size or highlight it
 					mode = false;
-					toggleSelect(y, x, true, conn);
+
+					squares = new Crd[gameGrid.legalMoveCount + 1];
+					int count = 1;
+
+					for(int i = 0; i < gameGrid.legalMoveCount; i++) {
+						if(gameGrid.moves[i].getInit().equals(init)) {
+							squares[count] = new Crd(gameGrid.moves[i].getDest().y, gameGrid.moves[i].getDest().x);
+							count = count + 1;
+						}
+					}
+					squares[0] = init;
+					//toggleSelect(init, true, conn);
+					toggleSelect(squares, true, conn);
 				}	
 			}
 		} else { //Selecting destination square
 			dest = new Crd(y, x);
 			CrdPair chosenMove = new CrdPair(init.y, init.x, y, x);
 			
-			//If legal move choice, move and run computer response move
-			for(int i = 0; i < 100 && moves[i] != null; i++) {
-				if(moves[i].equals(chosenMove)) {
-					enterMove(moves[i]);
-					sendBoard(conn);
-					computerPlay();
-					updateLegalMoves();
-					//gameGrid.print();
-					sendBoard(conn);
-					break;
-				}
+			CrdPair result = gameGrid.isLegal(chosenMove);
+			if(result != null) {
+				//Player move
+				gameGrid.move(new Move(gameGrid, result));
+				sendBoard(conn);
+				gameGrid.findLegalMoves();
+				handleStatus(gameGrid.status(), conn);
+				
+				//Computer move response
+				gameGrid.compMove();
+				sendBoard(conn);
+				gameGrid.findLegalMoves();
+				handleStatus(gameGrid.status(), conn);
+				//gameGrid.print();
 			}
 			
 			mode = true;
@@ -144,10 +153,19 @@ public class Game {
 		conn.send(jsonString);
 	}
 
-	public void toggleSelect(int y, int x, boolean status, WebSocket conn) {
+	public void toggleSelect(Crd squares[], boolean status, WebSocket conn) {
+		if(squares == null) {
+			return;
+		}
 		JSONArray crd = new JSONArray();
-		crd.put(y);
-		crd.put(x);
+		
+		for(int i = 0; i < squares.length; i++) {
+			if(squares[i] == null) {
+				break;
+			}
+			crd.put(squares[i].y);
+			crd.put(squares[i].x);
+		}
 		
 		JSONObject message = new JSONObject();
 		
@@ -156,31 +174,36 @@ public class Game {
 		} else {
 			message.put("desc", "deselect");
 		}
-		message.put("square", crd);
+		message.put("squares", crd);
 		String jsonString = message.toString();
 		conn.send(jsonString);
 	}
 
-    public void updateLegalMoves() {
-		moves = new CrdPair[100];
-	    gameGrid.getLegalMoves(moves, gameGrid.color);
-	}
-	
-	//Entering player move choices (updating board contents)
-	public void enterMove(CrdPair move) {
-		gameGrid.move(new Move(gameGrid, move));
-	}
-	
-	//Entering computer move choices (updating board contents)
-	public void computerPlay() {
-		gameGrid.compMove();
+	public void handleStatus(int status, WebSocket conn) {
+		JSONObject message = new JSONObject();
+		message.put("desc", "status");
+
+		if(status != 0) {
+			if(status == 1) {
+				message.put("status", "Draw by stalemate!");
+			} else {
+				message.put("status", "Checkmate!");
+			}
+		} else {
+			message.put("status", "   ");
+		}
+		String jsonString = message.toString();
+		conn.send(jsonString);
 	}
 
-	public void undo() {
-		gameGrid.undoMove();
-		updateLegalMoves();
-		//gameGrid.print();
-	}
+	public void reset() {
+        mode = true;
+        init = new Crd(0,0);
+        dest = new Crd(0,0);
+
+        //User game created
+        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
+    }
 	
 	public void changePromotion() {
 		if(gameGrid.promote < 5) {

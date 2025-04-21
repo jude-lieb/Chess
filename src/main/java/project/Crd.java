@@ -8,4 +8,8 @@ public class Crd {
 		this.x = x;
 		this.y = y;
 	}
+
+	public boolean equals(Crd compare) {
+		return compare.y == y && compare.x == x;
+	}
 }

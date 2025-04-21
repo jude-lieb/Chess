@@ -1,4 +1,5 @@
 const socket = new WebSocket("wss://judelieb.com");
+//const socket = new WebSocket("ws://localhost:3002");
 const grid = document.querySelector("#board");
 
 const images = [
@@ -52,17 +53,21 @@ function handleJSON(data) {
     loadBoard(data.squares);
   }
   if (data.desc === "select") {
-    grid.children[8 * data.square[0] + data.square[1]].classList.add(
-      "red-outline"
-    );
+    for(let i = 0; i < data.squares.length; i = i + 2) {
+      grid.children[8 * data.squares[i] + data.squares[i+1]].classList.add(
+        "red-outline"
+      );
+    }
   }
   if (data.desc === "deselect") {
-    grid.children[8 * data.square[0] + data.square[1]].classList.remove(
-      "red-outline"
-    );
+    for(let i = 0; i <  data.squares.length; i = i + 2) {
+      grid.children[8 * data.squares[i] + data.squares[i+1]].classList.remove(
+        "red-outline"
+      );
+    }
   }
-  if (data.desc === "text") {
-    console.log(data.info);
+  if (data.desc === "status") {
+    document.getElementById('messageBox').innerHTML = data.status
   }
   if (data.desc === "promote") {
     document.getElementById(

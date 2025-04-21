@@ -3,10 +3,12 @@ const fs = require("fs");
 const path = require("path");
 const WebSocket = require("ws");
 const https = require("https");
+//const http = require("http");
 
 const app = express();
 const port = 443;
-const BACKEND_WS_URL = "ws://localhost:3000"; // Your Java server
+// const port = 3002;
+const BACKEND_WS_URL = "ws://localhost:3000";
 
 const privateKey = fs.readFileSync(
   "/etc/letsencrypt/live/judelieb.com/privkey.pem",
@@ -22,6 +24,7 @@ const credentials = { key: privateKey, cert: certificate };
 app.use(express.static(path.join(__dirname, "public")));
 
 // Create and start HTTP server
+//const server = https.createServer(credentials, app);
 const server = https.createServer(credentials, app);
 
 server.listen(port, () => {

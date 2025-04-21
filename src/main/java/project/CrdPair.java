@@ -31,6 +31,10 @@ public class CrdPair {
 		return (startX == coord.startX && startY == coord.startY 
 				&& endX == coord.endX && endY == coord.endY);
 	}
+
+	public CrdPair clone() {
+		return new CrdPair(startY, startX, endY, endX);
+	}
 	
 	//Getting starting square coord
 	public Crd getInit() {
