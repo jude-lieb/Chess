@@ -18,7 +18,7 @@ socket.onmessage = (event) => {
     handleJSON(jsonData);
   } catch (error) {
     console.log("Error handling server input");
-    console.log(event);
+    console.log(error);
   }
 };
 
