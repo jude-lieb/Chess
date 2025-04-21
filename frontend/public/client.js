@@ -1,5 +1,5 @@
-const socket = new WebSocket("wss://judelieb.com");
-//const socket = new WebSocket("ws://localhost:3002");
+//const socket = new WebSocket("wss://judelieb.com");
+const socket = new WebSocket("ws://localhost:3002");
 const grid = document.querySelector("#board");
 
 const images = [

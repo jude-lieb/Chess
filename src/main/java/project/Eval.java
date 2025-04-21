@@ -105,12 +105,12 @@ public class Eval {
 		}
 
 		//Displaying results
-		System.out.println();
-		for(int i = 0; i < count; i++) {
-			System.out.printf("%.2f ", scores[i]);
-		}
-		System.out.println();
-		System.out.println("Total visited positions: " + totalCount);
+		// System.out.println();
+		// for(int i = 0; i < count; i++) {
+		// 	System.out.printf("%.2f ", scores[i]);
+		// }
+		// System.out.println();
+		// System.out.println("Total visited positions: " + totalCount);
 
 		//Finding how many moves are tied in score
 		double topScore = scores[0];
