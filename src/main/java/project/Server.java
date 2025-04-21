@@ -36,7 +36,7 @@ public class Server extends WebSocketServer {
 		JSONObject json = new JSONObject(message);
 		String desc = json.getString("desc");
 		System.out.println("Message Received");
-		System.out.println(desc);
+		//System.out.println(desc);
 
 		//Determine purpose of the message using description
 		if(desc.equals("coordinate")) {
