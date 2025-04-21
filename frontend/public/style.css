@@ -27,5 +27,5 @@ body {
 
 .red-outline {
     outline: 3px solid red;
-    outline-offset: -3px;
+    outline-offset: -5px;
 }
