@@ -56,7 +56,7 @@ wss.on("connection", (clientSocket) => {
   // === FORWARD: backend client ===
   backendSocket.on("message", (message) => {
     const msgStr = message.toString();
-    console.log("From backend to client:", msgStr);
+    //console.log("From backend to client:", msgStr);
 
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.send(msgStr);
