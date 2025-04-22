@@ -1,4 +1,0 @@
-promote
-reset
-undo
-messages (check, checkmate, invalid move)
