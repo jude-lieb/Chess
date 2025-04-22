@@ -5,6 +5,13 @@ import java.io.*;
 import org.java_websocket.WebSocket;
 import org.json.*;
 
+/**
+ * Game class
+ * Holds information for a single client's game connection
+ * Initialization and resetting of games
+ * Handles piece selection
+ */
+
 public class Game {
 
     String[] names = {"blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
@@ -17,7 +24,8 @@ public class Game {
     
     //Number of potential moves for each piece
     int[] moveAmount = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
-    //Relative material values of pieces (king excluded)
+
+    //Relative material values of pieces (king arbitrary)
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	   
     //Stores potential move coordinate shifts for each type
@@ -29,9 +37,11 @@ public class Game {
     //Start and end square coordinates
     Crd init;
     Crd dest;
+
 	//Holding which squares need to be selected or deselected
 	Crd[] squares;
-    
+
+	//Game board instance
     Grid gameGrid;
 
     public Game() {
@@ -78,9 +88,7 @@ public class Game {
 	}
 
 	public void handleCrdInput(int y, int x, WebSocket conn) {
-		//remove image highlighting
-		
-		//toggleSelect(init.y, init.x, false, conn);
+		//remove highlights around squares
 		toggleSelect(squares, false, conn);
 		
 		if(mode) { //Selecting starting square
@@ -153,6 +161,7 @@ public class Game {
 		conn.send(jsonString);
 	}
 
+	//Changing the promotion piece type selection
 	public void toggleSelect(Crd squares[], boolean status, WebSocket conn) {
 		if(squares == null) {
 			return;

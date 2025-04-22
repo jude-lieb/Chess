@@ -1,6 +1,7 @@
-const socket = new WebSocket("wss://judelieb.com");
-//const socket = new WebSocket("ws://localhost:3002");
+//const socket = new WebSocket("wss://judelieb.com");
+const socket = new WebSocket("ws://localhost:3002");
 const grid = document.querySelector("#board");
+const display = document.getElementById('messageBox')
 
 const images = [
   "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
@@ -14,7 +15,7 @@ socket.onopen = () => {
 socket.onmessage = (event) => {
   try {
     const jsonData = JSON.parse(event.data);
-    console.log("Received JSON:", jsonData);
+    //console.log("Received JSON:", jsonData);
     handleJSON(jsonData);
   } catch (error) {
     console.log("Error handling server input");
@@ -30,6 +31,7 @@ socket.onclose = () => {
   console.log("WebSocket connection closed.");
 };
 
+//Preventing websocket closure
 setInterval(() => {
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ desc: "ping" }));
@@ -45,6 +47,7 @@ function promote() {
 }
 
 function reset() {
+  display.innerHTML = " "
   socket.send(JSON.stringify({ desc: "reset" }));
 }
 
@@ -52,6 +55,7 @@ function handleJSON(data) {
   if (data.desc === "boardState") {
     loadBoard(data.squares);
   }
+
   if (data.desc === "select") {
     for(let i = 0; i < data.squares.length; i = i + 2) {
       grid.children[8 * data.squares[i] + data.squares[i+1]].classList.add(
@@ -59,6 +63,7 @@ function handleJSON(data) {
       );
     }
   }
+
   if (data.desc === "deselect") {
     for(let i = 0; i <  data.squares.length; i = i + 2) {
       grid.children[8 * data.squares[i] + data.squares[i+1]].classList.remove(
@@ -66,9 +71,11 @@ function handleJSON(data) {
       );
     }
   }
+
   if (data.desc === "status") {
-    document.getElementById('messageBox').innerHTML = data.status
+    display.innerHTML = data.status
   }
+
   if (data.desc === "promote") {
     document.getElementById(
       "promoteBtn"

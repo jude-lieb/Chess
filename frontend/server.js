@@ -6,32 +6,29 @@ const https = require("https");
 const http = require("http");
 
 const app = express();
-const port = 443;
-//const port = 3002;
+//const port = 443;
+const port = 3002;
 const BACKEND_WS_URL = "ws://localhost:3000";
 
-const privateKey = fs.readFileSync(
-  "/etc/letsencrypt/live/judelieb.com/privkey.pem",
-  "utf8"
-);
-const certificate = fs.readFileSync(
-  "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
-  "utf8"
-);
-const credentials = { key: privateKey, cert: certificate };
+// const privateKey = fs.readFileSync(
+//   "/etc/letsencrypt/live/judelieb.com/privkey.pem",
+//   "utf8"
+// );
+// const certificate = fs.readFileSync(
+//   "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
+//   "utf8"
+// );
+// const credentials = { key: privateKey, cert: certificate };
 
-// Serve static files from public/
 app.use(express.static(path.join(__dirname, "public")));
 
-// Create and start HTTP server
-//const server = http.createServer(app);
-const server = https.createServer(credentials, app);
+const server = http.createServer(app);
+//const server = https.createServer(credentials, app);
 
 server.listen(port, () => {
   console.log(`Live at https://localhost:${port}`);
 });
 
-// Attach WebSocket server to HTTP server
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (clientSocket) => {
@@ -39,11 +36,8 @@ wss.on("connection", (clientSocket) => {
 
   // Connect to Java backend
   const backendSocket = new WebSocket(BACKEND_WS_URL);
-
-  // Optional: queue messages while backend is connecting
   const queuedMessages = [];
 
-  // === FORWARD: client backend ===
   clientSocket.on("message", (message) => {
     const msgStr = message.toString();
     if (backendSocket.readyState === WebSocket.OPEN) {
@@ -53,7 +47,6 @@ wss.on("connection", (clientSocket) => {
     }
   });
 
-  // === FORWARD: backend client ===
   backendSocket.on("message", (message) => {
     const msgStr = message.toString();
     //console.log("From backend to client:", msgStr);
@@ -63,7 +56,6 @@ wss.on("connection", (clientSocket) => {
     }
   });
 
-  // Once backend is ready, flush queued messages
   backendSocket.on("open", () => {
     console.log("Connected to Java backend.");
     for (const msg of queuedMessages) {
@@ -72,7 +64,6 @@ wss.on("connection", (clientSocket) => {
     queuedMessages.length = 0;
   });
 
-  // === HANDLE CLOSING ===
   clientSocket.on("close", () => {
     console.log("Browser client disconnected.");
     backendSocket.close();
@@ -85,7 +76,6 @@ wss.on("connection", (clientSocket) => {
     }
   });
 
-  // === ERROR HANDLING ===
   clientSocket.on("error", (err) => {
     console.error("Client error:", err);
   });
