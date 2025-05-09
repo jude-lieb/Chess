@@ -39,7 +39,7 @@ public class Game {
     Crd dest;
 
 	//Holding which squares need to be selected or deselected
-	Crd[] squares;
+	int[] squares;
 
 	//Game board instance
     Grid gameGrid;
@@ -98,17 +98,22 @@ public class Game {
 					//set image to larger size or highlight it
 					mode = false;
 
-					squares = new Crd[gameGrid.legalMoveCount + 1];
-					int count = 1;
+					int[] sq = new int[gameGrid.legalMoveCount];
+					int count = 0;
 
 					for(int i = 0; i < gameGrid.legalMoveCount; i++) {
 						if(gameGrid.moves[i].getInit().equals(init)) {
-							squares[count] = new Crd(gameGrid.moves[i].getDest().y, gameGrid.moves[i].getDest().x);
+							sq[count] = (8 * gameGrid.moves[i].getDest().y) + gameGrid.moves[i].getDest().x;
 							count = count + 1;
 						}
 					}
-					squares[0] = init;
-					//toggleSelect(init, true, conn);
+
+					squares = new int[count+1];
+
+					for(int i = 0; i < count; i++) {
+						squares[i] = sq[i];
+					}
+					squares[count] = (8 * init.y) + init.x;
 					toggleSelect(squares, true, conn);
 				}	
 			}
@@ -162,18 +167,14 @@ public class Game {
 	}
 
 	//Changing the promotion piece type selection
-	public void toggleSelect(Crd squares[], boolean status, WebSocket conn) {
+	public void toggleSelect(int squares[], boolean status, WebSocket conn) {
 		if(squares == null) {
 			return;
 		}
 		JSONArray crd = new JSONArray();
 		
 		for(int i = 0; i < squares.length; i++) {
-			if(squares[i] == null) {
-				break;
-			}
-			crd.put(squares[i].y);
-			crd.put(squares[i].x);
+			crd.put(squares[i]);
 		}
 		
 		JSONObject message = new JSONObject();

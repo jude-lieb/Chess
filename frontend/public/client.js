@@ -49,6 +49,9 @@ function promote() {
 function reset() {
   display.innerHTML = " "
   socket.send(JSON.stringify({ desc: "reset" }));
+  for(square of grid.children) {
+    square.classList.remove("red-outline");
+  }
 }
 
 function handleJSON(data) {
@@ -57,16 +60,16 @@ function handleJSON(data) {
   }
 
   if (data.desc === "select") {
-    for(let i = 0; i < data.squares.length; i = i + 2) {
-      grid.children[8 * data.squares[i] + data.squares[i+1]].classList.add(
+    for(let i = 0; i < data.squares.length; i++) {
+      grid.children[data.squares[i]].classList.add(
         "red-outline"
       );
     }
   }
 
   if (data.desc === "deselect") {
-    for(let i = 0; i <  data.squares.length; i = i + 2) {
-      grid.children[8 * data.squares[i] + data.squares[i+1]].classList.remove(
+    for(let i = 0; i <  data.squares.length; i++) {
+      grid.children[data.squares[i]].classList.remove(
         "red-outline"
       );
     }
