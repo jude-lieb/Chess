@@ -2,7 +2,7 @@ How to get it running:
 Download and install java version >=21 and add it to your environment variables path.
 Download and install maven and add it to your environment variables path.
 To start the backend, run "mvn clean install" and "mvn exec:java".
-To start the frontend, run "npm i" and "npm start".
+To start the frontend, run "npm i" and "npm start" from the frontend folder.
 This project is currently configured for local testing, but can be converted to live hosting.
 
 
@@ -49,7 +49,7 @@ En-Passant:
     En-Passant breaks out of the usual capturing protocols. En-Passant requires special methods to handle it separately. Conditions such as the rank location of the pawn, an adjacent pawn, it having been moved there in the last turn while traversing 2 squares. 
 
 Move Responses:
-    A bare-bones move system is running that chooses a legal move to play, based on material totals at a low depth. 
+    A bare-bones move response system is running that chooses a legal move to play, based on material totals at a low depth. 
 
 Web Interface:
     Websockets are used to connect the java server to the node app and from the node app to the client.

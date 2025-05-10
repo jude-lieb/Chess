@@ -103,42 +103,34 @@ public class Game {
 	}
 
 	public void getOptions(WebSocket conn) {
-		int[][] holder = new int[64][28];  // Holder to store possible move positions for each square
-		int[] allowed = new int[64];  // Store the number of allowed moves for each square
+		int[][] holder = new int[64][28];
+		int[] allowed = new int[64];
 
-		// Iterate over the moves to populate holder and allowed arrays
 		for (int i = 0; i < gameGrid.legalMoveCount; i++) {
-			Crd current = gameGrid.moves[i].getInit();  // Get the initial position of the move
-			int start = (8 * current.y) + current.x;  // Convert the coordinates to a 1D index for the board
+			Crd current = gameGrid.moves[i].getInit();
+			int start = (8 * current.y) + current.x;
 
 			holder[start][0] = start;
-			allowed[start] = 1;  // Increment the count of allowed moves
+			allowed[start] = 1; //selected square highlighting
 
-			// Iterate through the list of legal moves to find moves that originate from `current`
 			for (int j = 0; j < gameGrid.legalMoveCount; j++) {
 				if (gameGrid.moves[j].getInit().equals(current)) {
-					// Calculate the destination square and add it to the holder
 					holder[start][allowed[start]] = (8 * gameGrid.moves[j].endY) + gameGrid.moves[j].endX;
-					allowed[start]++;  // Increment the count for the starting square
+					allowed[start]++;
 				}
 			}
 		}
 
-		// Create the JSON array to send the move options
 		JSONArray options = new JSONArray();
 		for (int i = 0; i < 64; i++) {
 			JSONArray moveset = new JSONArray();
 
-			// Only add moves if there are valid moves for the current square
 			for (int j = 0; j < allowed[i]; j++) {
 				moveset.put(holder[i][j]);
 			}
-
-			// Add the moveset to the main options array
 			options.put(moveset);
 		}
 
-		// Create the message and send it over the WebSocket
 		JSONObject message = new JSONObject();
 		message.put("desc", "loadSelect");
 		message.put("options", options);
