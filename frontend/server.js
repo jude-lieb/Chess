@@ -11,13 +11,9 @@ const port = 3002;
 const BACKEND_WS_URL = "ws://localhost:3000";
 
 // const privateKey = fs.readFileSync(
-//   "/etc/letsencrypt/live/judelieb.com/privkey.pem",
-//   "utf8"
-// );
+//   "/home/jude/certs/origin.key","utf8");
 // const certificate = fs.readFileSync(
-//   "/etc/letsencrypt/live/judelieb.com/fullchain.pem",
-//   "utf8"
-// );
+//   "/home/jude/certs/origin.crt","utf8");
 // const credentials = { key: privateKey, cert: certificate };
 
 app.use(express.static(path.join(__dirname, "public")));
