@@ -28,18 +28,8 @@ public class Game {
     //Relative material values of pieces (king arbitrary)
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	   
-    //Stores potential move coordinate shifts for each type
+    //Stores possible move coordinate shifts for each type
     Piece[] pieces = new Piece[13];
-    
-    //User piece selection mode (start square or end square)
-    boolean mode;
-    
-    //Start and end square coordinates
-    Crd init;
-    Crd dest;
-
-	//Holding which squares need to be selected or deselected
-	int[] squares;
 
 	//Game board instance
     Grid gameGrid;
@@ -75,8 +65,9 @@ public class Game {
 		if(desc.equals("undo")) {
 			gameGrid.undoMove();
 			gameGrid.undoMove();
-			toggleSelect(squares, false, conn);
+			getOptions(conn);
 			sendBoard(conn);
+			getOptions(conn);
 		} else if(desc.equals("promote")) {
 			changePromotion();
 			sendPromote(conn);
@@ -84,69 +75,74 @@ public class Game {
 			reset();
             sendBoard(conn);
             sendPromote(conn);
+			getOptions(conn);
 		}
 	}
 
-	public void handleCrdInput(int y, int x, WebSocket conn) {
-		//remove highlights around squares
-		toggleSelect(squares, false, conn);
-		
-		if(mode) { //Selecting starting square
-			init = new Crd(y, x); 
-			if(!Grid.colorCompare(gameGrid.board[init.y][init.x], gameGrid.color)) {
-				if(gameGrid.board[init.y][init.x] != 0) {
-					//set image to larger size or highlight it
-					mode = false;
+	public void handleCrdInput(JSONArray move, WebSocket conn) {		
+		CrdPair chosenMove = new CrdPair(move.getInt(0), move.getInt(1), 
+			move.getInt(2), move.getInt(3));
 
-					int[] sq = new int[gameGrid.legalMoveCount];
-					int count = 0;
-
-					for(int i = 0; i < gameGrid.legalMoveCount; i++) {
-						if(gameGrid.moves[i].getInit().equals(init)) {
-							sq[count] = (8 * gameGrid.moves[i].getDest().y) + gameGrid.moves[i].getDest().x;
-							count = count + 1;
-						}
-					}
-
-					squares = new int[count+1];
-
-					for(int i = 0; i < count; i++) {
-						squares[i] = sq[i];
-					}
-					squares[count] = (8 * init.y) + init.x;
-					toggleSelect(squares, true, conn);
-				}	
-			}
-		} else { //Selecting destination square
-			dest = new Crd(y, x);
-			CrdPair chosenMove = new CrdPair(init.y, init.x, y, x);
+		CrdPair result = gameGrid.isLegal(chosenMove);
+		if(result != null) {
+			//Player move
+			gameGrid.move(new Move(gameGrid, result));
+			sendBoard(conn);
+			gameGrid.findLegalMoves();
+			handleStatus(gameGrid.status(), conn);
 			
-			CrdPair result = gameGrid.isLegal(chosenMove);
-			if(result != null) {
-				//Player move
-				gameGrid.move(new Move(gameGrid, result));
-				sendBoard(conn);
-				gameGrid.findLegalMoves();
-				handleStatus(gameGrid.status(), conn);
-				
-				//Computer move response
-				gameGrid.compMove();
-				sendBoard(conn);
-				gameGrid.findLegalMoves();
-				handleStatus(gameGrid.status(), conn);
-				//gameGrid.print();
-			}
-			
-			mode = true;
+			//Computer move response
+			gameGrid.compMove();
+			sendBoard(conn);
+
+			//Preparing
+			gameGrid.findLegalMoves();
+			getOptions(conn);
+			handleStatus(gameGrid.status(), conn);
 		}
 	}
+
+	public void getOptions(WebSocket conn) {
+		int[][] holder = new int[64][28];
+		int[] allowed = new int[64];
+
+		for (int i = 0; i < gameGrid.legalMoveCount; i++) {
+			Crd current = gameGrid.moves[i].getInit();
+			int start = (8 * current.y) + current.x;
+
+			holder[start][0] = start;
+			allowed[start] = 1; //selected square highlighting
+
+			for (int j = 0; j < gameGrid.legalMoveCount; j++) {
+				if (gameGrid.moves[j].getInit().equals(current)) {
+					holder[start][allowed[start]] = (8 * gameGrid.moves[j].endY) + gameGrid.moves[j].endX;
+					allowed[start]++;
+				}
+			}
+		}
+
+		JSONArray options = new JSONArray();
+		for (int i = 0; i < 64; i++) {
+			JSONArray moveset = new JSONArray();
+
+			for (int j = 0; j < allowed[i]; j++) {
+				moveset.put(holder[i][j]);
+			}
+			options.put(moveset);
+		}
+
+		JSONObject message = new JSONObject();
+		message.put("desc", "loadSelect");
+		message.put("options", options);
+		conn.send(message.toString());
+	}
+
 
 	public void sendPromote(WebSocket conn) {
 		JSONObject message = new JSONObject();
 		message.put("desc", "promote");
 		message.put("value", gameGrid.promote);
-		String jsonString = message.toString();
-		conn.send(jsonString);
+		conn.send(message.toString());
 	}
 
 	public void sendBoard(WebSocket conn) {
@@ -166,29 +162,6 @@ public class Game {
 		conn.send(jsonString);
 	}
 
-	//Changing the promotion piece type selection
-	public void toggleSelect(int squares[], boolean status, WebSocket conn) {
-		if(squares == null) {
-			return;
-		}
-		JSONArray crd = new JSONArray();
-		
-		for(int i = 0; i < squares.length; i++) {
-			crd.put(squares[i]);
-		}
-		
-		JSONObject message = new JSONObject();
-		
-		if(status) {
-			message.put("desc", "select");
-		} else {
-			message.put("desc", "deselect");
-		}
-		message.put("squares", crd);
-		String jsonString = message.toString();
-		conn.send(jsonString);
-	}
-
 	public void handleStatus(int status, WebSocket conn) {
 		JSONObject message = new JSONObject();
 		message.put("desc", "status");
@@ -202,16 +175,11 @@ public class Game {
 		} else {
 			message.put("status", "   ");
 		}
-		String jsonString = message.toString();
-		conn.send(jsonString);
+		conn.send(message.toString());
 	}
 
+	//User game initialization
 	public void reset() {
-        mode = true;
-        init = new Crd(0,0);
-        dest = new Crd(0,0);
-
-        //User game created
         gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
     }
 	
@@ -221,10 +189,6 @@ public class Game {
 		} else {
 			gameGrid.promote = 2;
 		}
-	}
-	
-	public void exit() {
-		System.exit(0);
 	}
 }
 

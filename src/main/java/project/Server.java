@@ -25,6 +25,7 @@ public class Server extends WebSocketServer {
 		games.put(conn, newGame);
 
 		newGame.sendBoard(conn);
+        newGame.getOptions(conn);
 		newGame.sendPromote(conn);
     }
 
@@ -39,11 +40,9 @@ public class Server extends WebSocketServer {
 		//System.out.println(desc);
 
 		//Determine purpose of the message using description
-		if(desc.equals("coordinate")) {
+		if(desc.equals("move")) {
 			JSONArray values = json.getJSONArray("crd");
-			int firstValue = values.getInt(0);
-			int secondValue = values.getInt(1);
-			game.handleCrdInput(firstValue, secondValue, conn);
+			game.handleCrdInput(values, conn);
 		} else {
 			game.handleCommand(desc, conn);
 		}
