@@ -111,7 +111,7 @@ public class Game {
 			int start = (8 * current.y) + current.x;
 
 			holder[start][0] = start;
-			allowed[start] = 1; //selected square highlighting
+			allowed[start] = 0;
 
 			for (int j = 0; j < gameGrid.legalMoveCount; j++) {
 				if (gameGrid.moves[j].getInit().equals(current)) {

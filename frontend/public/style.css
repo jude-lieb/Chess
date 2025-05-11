@@ -29,3 +29,8 @@ body {
     outline: 3px solid red;
     outline-offset: -5px;
 }
+
+.green-outline {
+    outline: 3px solid green;
+    outline-offset: -5px;
+}
