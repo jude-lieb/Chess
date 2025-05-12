@@ -58,6 +58,7 @@ function reset() {
   socket.send(JSON.stringify({ desc: "reset" }))
   for(square of grid.children) {
     square.classList.remove("red-outline")
+    square.classList.remove("green-outline")
   }
 }
 
