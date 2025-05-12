@@ -2,9 +2,11 @@
 const socket = new WebSocket("ws://localhost:3002")
 const grid = document.querySelector("#board")
 const display = document.getElementById('messageBox')
+const promoteBtn =  document.getElementById("promoteBtn")
 
 let options = []
 let mode = true
+let promoteType = 5
 let x = 0
 let y = 0
 
@@ -13,6 +15,17 @@ const images = [
   "bp.png","bn.png","bb.png","br.png","bq.png","bk.png",
 ]
 
+for (let i = 0; i < 64; i++) {
+  const img = document.createElement("img")
+  img.src = "/images/blank.jpg"
+  img.className = "grid-item"
+  img.draggable = false
+  img.row = Math.floor(i / 8)
+  img.col = i % 8
+  img.onclick = () => {handleClick(img.row, img.col)}
+  grid.appendChild(img)
+}
+
 socket.onopen = () => {
   console.log("Connected to Java WebSocket!");
 }
@@ -20,7 +33,6 @@ socket.onopen = () => {
 socket.onmessage = (event) => {
   try {
     const jsonData = JSON.parse(event.data)
-    //console.log("Received JSON:", jsonData);
     handleJSON(jsonData)
   } catch (error) {
     console.log("Error handling server input")
@@ -48,6 +60,12 @@ function undo() {
 }
 
 function promote() {
+  if(promoteType < 5) {
+    promoteType++;
+  } else {
+    promoteType = 2;
+  }
+  promoteBtn.innerHTML = `Promote Toggle ${promoteType}`
   socket.send(JSON.stringify({ desc: "promote" }))
 }
 
@@ -72,9 +90,8 @@ function handleJSON(data) {
   }
 
   if(data.desc === "promote") {
-    document.getElementById(
-      "promoteBtn"
-    ).innerHTML = `Promote Toggle ${data.value}`
+    promoteType = data.value
+    promoteBtn.innerHTML = `Promote Toggle ${data.value}`
   }
 
   if(data.desc === "loadSelect") {
@@ -88,20 +105,6 @@ function loadBoard(set) {
     grid.children[i].src = "/images/" + images[set[i]]
   }
 }
-
-for (let i = 0; i < 64; i++) {
-  const img = document.createElement("img")
-  img.src = "/images/blank.jpg"
-  img.className = "grid-item"
-  img.draggable = false
-  img.row = Math.floor(i / 8)
-  img.col = i % 8
-  img.onclick = () => {
-    handleClick(img.row, img.col)
-  }
-  grid.appendChild(img)
-}
-
 
 function handleClick(row, col) {
   if(mode == true) {

@@ -10,7 +10,7 @@ package project;
 public class Grid {
 	int[][] board;
 	MoveStack prevMoves;
-	Piece[] pieces;
+	Crd[][] pieceMoves;
 	CrdPair[] moves;
 	int[] values = {0,1,3,3,5,9,0,1,3,3,5,9,0};
 	int legalMoveCount;
@@ -24,7 +24,7 @@ public class Grid {
 	boolean wQ;
 	
 	//Initializing
-	public Grid(int[] set, Piece[] pieces, int wMat, int bMat, int startColor, int promote) {
+	public Grid(int[] set, Crd[][] pieceMoves, int wMat, int bMat, int startColor, int promote) {
 		int[][] temp = new int[8][8];
 		int count = 0; 
 		for(int i = 0; i < 8; i++) {
@@ -35,7 +35,7 @@ public class Grid {
 		}
 		this.promote = promote;
 		this.board = temp;
-		this.pieces = pieces;
+		this.pieceMoves = pieceMoves;
 		prevMoves = new MoveStack();
 		color = startColor;
 		this.bMat = bMat;
@@ -104,8 +104,8 @@ public class Grid {
 			}
 		}
 		
-		if(move.coord.extra != 0) { //En Passant capturing adjacently
-			board[move.coord.startY][move.coord.startX - move.coord.extra] = 0;
+		if(move.coord.passant != 0) { //En Passant capturing adjacently
+			board[move.coord.startY][move.coord.startX - move.coord.passant] = 0;
 		}
 		
 		//Castle status updates
@@ -158,8 +158,8 @@ public class Grid {
 			}
 		}
 		
-		if(move.coord.extra != 0) { //En Passant capturing adjacently
-			board[move.coord.startY][move.coord.startX - move.coord.extra] = 1;
+		if(move.coord.passant != 0) { //En Passant capturing adjacently
+			board[move.coord.startY][move.coord.startX - move.coord.passant] = 1;
 		}
 		
 		//Castle status updates
@@ -243,7 +243,7 @@ public class Grid {
 		for(int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
 				if(!colorCompare(board[i][j], color)) {
-					Crd[] moves = pieces[board[i][j]].getMoves();
+					Crd[] moves = pieceMoves[board[i][j]];
 					for(int q = 0; q < moves.length; q++) {
 						if(isMoveLegal(new Crd(i, j), new Crd(i+moves[q].y, j+moves[q].x), color)){
 							list[count] = new CrdPair(i, j, i+moves[q].y, j+moves[q].x);
@@ -318,7 +318,7 @@ public class Grid {
 			for(int q = 0; q < 8; q++) {
 				type = board[i][q];
 				if(type != 0 && colorCompare(type, color)) {
-					Crd[] moves = pieces[type].getMoves();
+					Crd[] moves = pieceMoves[type];
 					for(int j = 0; j < moves.length; j++) {
 						x = q + moves[j].x;
 						y = i + moves[j].y;
@@ -345,7 +345,7 @@ public class Grid {
 			for(int q = 0; q < 8; q++) {
 				type = board[i][q];
 				if(type != 0 && colorCompare(type, color)) {
-					Crd[] moves = pieces[type].getMoves();
+					Crd[] moves = pieceMoves[type];
 					for(int j = 0; j < moves.length; j++) {
 						x = q + moves[j].x;
 						y = i + moves[j].y;

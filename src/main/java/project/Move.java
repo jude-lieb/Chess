@@ -89,7 +89,7 @@ public class Move {
 			}
 		}
 		
-		if(coord.extra != 0) { //En passant capture
+		if(coord.passant != 0) { //En passant capture
 			matChange = 1;
 		}
 		matChange = matChange + values[grid.board[moveCrd.endY][moveCrd.endX]];

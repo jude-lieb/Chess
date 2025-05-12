@@ -29,7 +29,7 @@ public class Game {
 	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	   
     //Stores possible move coordinate shifts for each type
-    Piece[] pieces = new Piece[13];
+    Crd[][] pieceMoves = new Crd[13][];
 
 	//Game board instance
     Grid gameGrid;
@@ -45,13 +45,12 @@ public class Game {
 			//Creating each piece type
 			//Reading all potential piece coordinate shifts from text file
 			for(int i = 0; i < 13; i++) { 
-				Crd[] temp = new Crd[moveAmount[i]];
+				pieceMoves[i] = new Crd[moveAmount[i]];
 				for(int j = 0; j < moveAmount[i]; j++) {
 					readInt1 = Integer.parseInt(scan.next());
 					readInt2 = Integer.parseInt(scan.next());
-					temp[j] = new Crd(readInt1, readInt2);
+					pieceMoves[i][j] = new Crd(readInt1, readInt2);
 				}
-				pieces[i] = new Piece(i, temp);
 			}
 			scan.close();
 		} catch (FileNotFoundException e) {
@@ -92,13 +91,12 @@ public class Game {
 			handleStatus(gameGrid.status(), conn);
 			
 			//Computer move response
-			gameGrid.compMove();
-			sendBoard(conn);
+			// gameGrid.compMove();
+			// sendBoard(conn);
+			// gameGrid.findLegalMoves();
+			// handleStatus(gameGrid.status(), conn);
 
-			//Preparing
-			gameGrid.findLegalMoves();
 			getOptions(conn);
-			handleStatus(gameGrid.status(), conn);
 		}
 	}
 
@@ -180,7 +178,7 @@ public class Game {
 
 	//User game initialization
 	public void reset() {
-        gameGrid = new Grid(set, pieces, 39, 39, 6, 5);
+        gameGrid = new Grid(set, pieceMoves, 39, 39, 6, 5);
     }
 	
 	public void changePromotion() {

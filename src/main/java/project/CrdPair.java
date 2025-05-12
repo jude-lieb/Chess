@@ -1,7 +1,7 @@
 package project;
 public class CrdPair {
 	int startX, endX, startY, endY;
-	int extra;
+	int passant;
 	
 	//Another coordinate format
 	public CrdPair(int a, int b, int c, int d) {
@@ -11,12 +11,12 @@ public class CrdPair {
 		endX = d;
 	}
 	
-	public CrdPair(int a, int b, int c, int d, int extra) {
+	public CrdPair(int a, int b, int c, int d, int passant) {
 		startY = a;
 		startX = b;
 		endY = c;
 		endX = d;
-		this.extra = extra;
+		this.passant = passant;
 	}
 	
 	//Makes new Mv object with two coordinates
@@ -29,7 +29,7 @@ public class CrdPair {
 	
 	public boolean equals(CrdPair coord) {
 		return (startX == coord.startX && startY == coord.startY 
-				&& endX == coord.endX && endY == coord.endY && coord.extra == extra);
+				&& endX == coord.endX && endY == coord.endY);
 	}
 
 	public CrdPair clone() {
