@@ -111,7 +111,7 @@ function handleClick(row, col) {
     y = row
     x = col
     let init = (row * 8) + col
-    grid.children[init].classList.add("green-outline")
+    grid.children[init].classList.add("red-outline")
     if(options[init] != undefined && options[init] != null) {
       for(let i = 0; i < options[init].length; i++) {
         grid.children[options[init][i]].classList.add("red-outline")
@@ -120,7 +120,7 @@ function handleClick(row, col) {
     mode = false
   } else {
     let crd = (y * 8) + x
-    grid.children[crd].classList.remove("green-outline")
+    grid.children[crd].classList.remove("red-outline")
     if(options[crd] != undefined && options[crd] != null) {
       for(let i = 0; i < options[crd].length; i++) {
         grid.children[options[crd][i]].classList.remove("red-outline")
