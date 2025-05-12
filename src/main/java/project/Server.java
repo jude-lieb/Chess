@@ -36,11 +36,10 @@ public class Server extends WebSocketServer {
 
 		JSONObject json = new JSONObject(message);
 		String desc = json.getString("desc");
-		System.out.println("Message Received");
-		//System.out.println(desc);
+		System.out.println("Description: " + desc);
 
 		//Determine purpose of the message using description
-		if(desc.equals("move")) {
+		if(desc.equals("move request")) {
 			JSONArray values = json.getJSONArray("crd");
 			game.handleCrdInput(values, conn);
 		} else {

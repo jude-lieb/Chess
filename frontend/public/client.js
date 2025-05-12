@@ -127,6 +127,6 @@ function handleClick(row, col) {
       } 
     }
     mode = true
-    socket.send(JSON.stringify({ desc: "move", crd: [y, x, row, col] }))
+    socket.send(JSON.stringify({ desc: "move request", crd: [y, x, row, col] }))
   }
 }

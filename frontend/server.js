@@ -28,7 +28,7 @@ server.listen(port, () => {
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (clientSocket) => {
-  console.log("Browser client connected.");
+  //console.log("Browser client connected.");
 
   // Connect to Java backend
   const backendSocket = new WebSocket(BACKEND_WS_URL);
@@ -53,7 +53,7 @@ wss.on("connection", (clientSocket) => {
   });
 
   backendSocket.on("open", () => {
-    console.log("Connected to Java backend.");
+    //console.log("Connected to Java backend.");
     for (const msg of queuedMessages) {
       backendSocket.send(msg);
     }
@@ -61,12 +61,12 @@ wss.on("connection", (clientSocket) => {
   });
 
   clientSocket.on("close", () => {
-    console.log("Browser client disconnected.");
+    //console.log("Browser client disconnected.");
     backendSocket.close();
   });
 
   backendSocket.on("close", () => {
-    console.log("Java backend disconnected.");
+    //console.log("Java backend disconnected.");
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.close();
     }

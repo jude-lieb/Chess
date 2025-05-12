@@ -91,10 +91,10 @@ public class Game {
 			handleStatus(gameGrid.status(), conn);
 			
 			//Computer move response
-			// gameGrid.compMove();
-			// sendBoard(conn);
-			// gameGrid.findLegalMoves();
-			// handleStatus(gameGrid.status(), conn);
+			gameGrid.compMove();
+			sendBoard(conn);
+			gameGrid.findLegalMoves();
+			handleStatus(gameGrid.status(), conn);
 
 			getOptions(conn);
 		}

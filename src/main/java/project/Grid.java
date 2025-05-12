@@ -45,7 +45,7 @@ public class Grid {
 		bQ = false;
 		wQ = false;
 		findLegalMoves();
-		System.out.println("legal move count " + legalMoveCount);
+		//System.out.println("legal move count " + legalMoveCount);
 	}
 
 	public CrdPair isLegal(CrdPair chosenMove) {
