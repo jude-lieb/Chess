@@ -4,22 +4,22 @@ const path = require("path");
 const WebSocket = require("ws");
 const https = require("https");
 const http = require("http");
+require("dotenv").config()
 
+const deployed = process.env.DEPLOYED === "true";
 const app = express();
-//const port = 443;
-const port = 3002;
+const port = deployed ? 443 : 3002;
 const BACKEND_WS_URL = "ws://localhost:3000";
 
-// const privateKey = fs.readFileSync(
-//   "/home/jude/certs/origin.key","utf8");
-// const certificate = fs.readFileSync(
-//   "/home/jude/certs/origin.crt","utf8");
-// const credentials = { key: privateKey, cert: certificate };
+const privateKey = deployed ? fs.readFileSync(
+  "/home/jude/certs/origin.key","utf8") : null
+const certificate = deployed ? fs.readFileSync(
+  "/home/jude/certs/origin.crt","utf8") : null
+const credentials = deployed ? { key: privateKey, cert: certificate } : null
 
 app.use(express.static(path.join(__dirname, "public")));
 
-const server = http.createServer(app);
-//const server = https.createServer(credentials, app);
+const server = deployed ? https.createServer(credentials, app) : http.createServer(app);
 
 server.listen(port, () => {
   console.log(`Live at https://localhost:${port}`);

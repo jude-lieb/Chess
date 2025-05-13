@@ -1,4 +1,5 @@
 .vscode
 .class
+.env
 /target/
 /node_modules

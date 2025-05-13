@@ -1,5 +1,5 @@
-//const socket = new WebSocket("wss://judelieb.com");
-const socket = new WebSocket("ws://localhost:3002")
+const deployed = window.location.hostname === "judelieb.com";
+const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost:3002");
 const grid = document.querySelector("#board")
 const display = document.getElementById('messageBox')
 const promoteBtn =  document.getElementById("promoteBtn")
