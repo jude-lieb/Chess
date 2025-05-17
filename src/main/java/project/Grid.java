@@ -12,7 +12,7 @@ public class Grid {
 	MoveStack prevMoves;
 	Crd[][] pieceMoves;
 	CrdPair[] moves;
-	int[] values = {0,1,3,3,5,9,0,1,3,3,5,9,0};
+	int[] values;
 	int legalMoveCount;
 	int color;
 	int promote;
@@ -24,7 +24,7 @@ public class Grid {
 	boolean wQ;
 	
 	//Initializing
-	public Grid(int[] set, Crd[][] pieceMoves, int wMat, int bMat, int startColor, int promote) {
+	public Grid(int[] set, Crd[][] pieceMoves, int[] values, int wMat, int bMat, int startColor, int promote) {
 		int[][] temp = new int[8][8];
 		int count = 0; 
 		for(int i = 0; i < 8; i++) {
@@ -45,7 +45,6 @@ public class Grid {
 		bQ = false;
 		wQ = false;
 		findLegalMoves();
-		//System.out.println("legal move count " + legalMoveCount);
 	}
 
 	public CrdPair isLegal(CrdPair chosenMove) {
@@ -189,7 +188,6 @@ public class Grid {
 
 		legalMoveCount = move.legalMoveCount;
 		moves = move.moves;
-		//System.out.println("Undo Color " + move.color);
 		color = move.color;
 	}
 	
@@ -519,18 +517,17 @@ public class Grid {
 		}
 	}	
 	
-	//Displaying integer representation of board and material totals
+	//Displaying integer representation of board
 	public void print() {
-		// for(int i = 0; i < 8; i++) {
-		// 	System.out.println();
-		// 	for(int j = 0; j < 8; j++) {
-		// 		if(board[i][j] != 0) {
-		// 			System.out.printf("%-2s ", board[i][j]);
-		// 		} else {
-		// 			System.out.printf("%-2s ", "_");
-		// 		}
-		// 	}
-		// }
-		// System.out.println("wMat: " + wMat + " bMat: "+ bMat);
+		for(int i = 0; i < 8; i++) {
+			System.out.println();
+			for(int j = 0; j < 8; j++) {
+				if(board[i][j] != 0) {
+					System.out.printf("%-2s ", board[i][j]);
+				} else {
+					System.out.printf("%-2s ", "_");
+				}
+			}
+		}
 	}
 }

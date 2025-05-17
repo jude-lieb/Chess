@@ -9,7 +9,7 @@ import org.json.*;
  * Game class
  * Holds information for a single client's game connection
  * Initialization and resetting of games
- * Handles piece selection
+ * Processes user input
  */
 
 public class Game {
@@ -36,7 +36,7 @@ public class Game {
 
     public Game() {
         //Preparing to read x and y shifts for each pieces' moves
-        File file = new File("newMoves.txt");
+        File file = new File("vectors.txt");
 
 		try {
 			Scanner scan = new Scanner(file);
@@ -178,7 +178,7 @@ public class Game {
 
 	//User game initialization
 	public void reset() {
-        gameGrid = new Grid(set, pieceMoves, 39, 39, 6, 5);
+        gameGrid = new Grid(set, pieceMoves, values, 39, 39, 6, 5);
     }
 	
 	public void changePromotion() {

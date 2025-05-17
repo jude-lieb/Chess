@@ -29,7 +29,7 @@ public class CrdPair {
 	
 	public boolean equals(CrdPair coord) {
 		return (startX == coord.startX && startY == coord.startY 
-				&& endX == coord.endX && endY == coord.endY);
+			&& endX == coord.endX && endY == coord.endY);
 	}
 
 	public CrdPair clone() {
