@@ -1,15 +1,14 @@
 How to get it running:
-Download and install java version >=21 and add it to your environment variables path.
+Download and install java version >=17 and add it to your environment variables path.
 Download and install maven and add it to your environment variables path.
 To start the backend, run "mvn clean install" and "mvn exec:java".
+Copy the .env_example file into a .env file in the frontend folder.
 To start the frontend, run "npm i" and "npm start" from the frontend folder.
-This project is currently configured for local testing, but can be converted to live hosting.
 
 
 Project Information:
 Developer: Jude Lieb
 Start date: 06/2023
-End Date: Estimated 06/2028
 
 
 Components and Features:

@@ -46,10 +46,15 @@ public class Game {
 			//Reading all potential piece coordinate shifts from text file
 			for(int i = 0; i < 13; i++) { 
 				pieceMoves[i] = new Crd[moveAmount[i]];
-				for(int j = 0; j < moveAmount[i]; j++) {
-					readInt1 = Integer.parseInt(scan.next());
-					readInt2 = Integer.parseInt(scan.next());
-					pieceMoves[i][j] = new Crd(readInt1, readInt2);
+
+				if(i > 7) {
+					pieceMoves[i] = pieceMoves[i-6];
+				} else {
+					for(int j = 0; j < moveAmount[i]; j++) {
+						readInt1 = Integer.parseInt(scan.next());
+						readInt2 = Integer.parseInt(scan.next());
+						pieceMoves[i][j] = new Crd(readInt1, readInt2);
+					}
 				}
 			}
 			scan.close();
