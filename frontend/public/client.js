@@ -121,8 +121,13 @@ function handleClick(row, col) {
   } else {
     let crd = (y * 8) + x
     grid.children[crd].classList.remove("red-outline")
+    
     if(options[crd] != undefined && options[crd] != null) {
       for(let i = 0; i < options[crd].length; i++) {
+        if(options[crd][i] === (row*8) + col) {
+          grid.children[(row * 8) + col].src = grid.children[crd].src
+          grid.children[crd].src = "/images/blank.jpg"
+        } 
         grid.children[options[crd][i]].classList.remove("red-outline")
       } 
     }
