@@ -16,14 +16,18 @@ const images = [
 ]
 
 for (let i = 0; i < 64; i++) {
-  const img = document.createElement("img")
-  img.src = "/images/blank.jpg"
-  img.className = "grid-item"
-  img.draggable = false
-  img.row = Math.floor(i / 8)
-  img.col = i % 8
-  img.onclick = () => {handleClick(img.row, img.col)}
-  grid.appendChild(img)
+  const cell = document.createElement("div");
+  cell.className = "grid-item";
+  cell.row = Math.floor(i / 8);
+  cell.col = i % 8;
+  cell.onclick = () => handleClick(cell.row, cell.col);
+
+  const img = document.createElement("img");
+  img.src = "/images/blank.jpg";
+  img.draggable = false;
+
+  cell.appendChild(img);
+  grid.appendChild(cell);
 }
 
 socket.onopen = () => {
@@ -102,36 +106,48 @@ function handleJSON(data) {
 
 function loadBoard(set) {
   for (let i = 0; i < 64; i++) {
-    grid.children[i].src = "/images/" + images[set[i]]
+    const img = grid.children[i].querySelector("img");
+    img.src = "/images/" + images[set[i]];
   }
 }
 
+
 function handleClick(row, col) {
-  if(mode == true) {
-    y = row
-    x = col
-    let init = (row * 8) + col
-    grid.children[init].classList.add("red-outline")
-    if(options[init] != undefined && options[init] != null) {
-      for(let i = 0; i < options[init].length; i++) {
-        grid.children[options[init][i]].classList.add("red-outline")
-      } 
+  const clickedIndex = row * 8 + col;
+
+  if (mode === true) {
+    y = row;
+    x = col;
+    const init = clickedIndex;
+    grid.children[init].classList.add("green-outline");
+
+    if (options[init] !== undefined && options[init] !== null) {
+      for (let i = 0; i < options[init].length; i++) {
+        grid.children[options[init][i]].classList.add("red-outline");
+      }
     }
-    mode = false
+    mode = false;
   } else {
-    let crd = (y * 8) + x
-    grid.children[crd].classList.remove("red-outline")
-    
-    if(options[crd] != undefined && options[crd] != null) {
-      for(let i = 0; i < options[crd].length; i++) {
-        if(options[crd][i] === (row*8) + col) {
-          grid.children[(row * 8) + col].src = grid.children[crd].src
-          grid.children[crd].src = "/images/blank.jpg"
-        } 
-        grid.children[options[crd][i]].classList.remove("red-outline")
-      } 
+    const crd = y * 8 + x;
+    grid.children[crd].classList.remove("green-outline");
+
+    if (options[crd] !== undefined && options[crd] !== null) {
+      for (let i = 0; i < options[crd].length; i++) {
+        const targetIndex = options[crd][i];
+        const targetDiv = grid.children[targetIndex];
+        const fromImg = grid.children[crd].querySelector("img");
+        const toImg = targetDiv.querySelector("img");
+
+        if (targetIndex === clickedIndex) {
+          toImg.src = fromImg.src;
+          fromImg.src = "/images/blank.jpg";
+        }
+        targetDiv.classList.remove("red-outline");
+      }
     }
-    mode = true
-    socket.send(JSON.stringify({ desc: "move request", crd: [y, x, row, col] }))
+
+    mode = true;
+    socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col],}));
   }
 }
+

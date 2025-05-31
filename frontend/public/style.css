@@ -1,12 +1,3 @@
-body {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    background-color: #f0f0f0;
-}
-
 .grid-container {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
@@ -18,10 +9,20 @@ body {
     background-repeat: no-repeat;
 }
 
-.grid-container > .grid-item {
+.grid-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.grid-item img {
     width: 100%;
     height: 100%;
     object-fit: contain;
+    display: block;
 }
 
 .red-outline {
@@ -34,7 +35,18 @@ body {
     outline-offset: -4px;
 }
 
-button {
-    min-width: 120px;
-    white-space: nowrap;
+body {
+    margin: 0;
+    background-color: #f0f0f0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
