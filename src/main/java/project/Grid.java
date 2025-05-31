@@ -8,33 +8,26 @@ package project;
  * Entering and undoing moves
  */
 public class Grid {
-	int[][] board;
 	MoveStack prevMoves;
 	Crd[][] pieceMoves;
 	CrdPair[] moves;
+	int[][] board;
 	int[] values;
-	int legalMoveCount;
-	int color;
-	int promote;
-	int bMat;
-	int wMat;
-	boolean bK;
-	boolean wK;
-	boolean bQ;
-	boolean wQ;
+	int legalMoveCount, color, promote;
+	int bMat, wMat;
+	boolean bK, wK, bQ, wQ;
 	
 	//Initializing
 	public Grid(int[] set, Crd[][] pieceMoves, int[] values, int wMat, int bMat, int startColor, int promote) {
-		int[][] temp = new int[8][8];
+		board = new int[8][8];
 		int count = 0; 
 		for(int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
-				temp[i][j] = set[count];	
+				board[i][j] = set[count];	
 				count++;
 			}
 		}
 		this.promote = promote;
-		this.board = temp;
 		this.pieceMoves = pieceMoves;
 		prevMoves = new MoveStack();
 		color = startColor;
@@ -70,15 +63,10 @@ public class Grid {
 	
 	//Calls evaluation method and makes automatic move
 	public void compMove() {	
-		if(legalMoveCount == 0) {
-			System.out.println("Computer cannot move.");
-			return;
-		}
+		if(legalMoveCount == 0) return;
 
 		Eval ev = new Eval();
 		ev.getBestMove(this);
-		//System.out.println("Best Move: ");
-		//System.out.println(this.moves[0]);
 		move(new Move(this, this.moves[0]));
 	}
 
@@ -108,18 +96,10 @@ public class Grid {
 		}
 		
 		//Castle status updates
-		if(move.bK) {
-			bK = true;
-		}
-		if(move.bQ) {
-			bQ = true;
-		}
-		if(move.wK) {
-			wK = true;
-		}
-		if(move.wQ) {
-			wQ = true;
-		}
+		if(move.bK) bK = true;
+		if(move.bQ) bQ = true;
+		if(move.wK) wK = true;
+		if(move.wQ) wQ = true;
 		
 		//Handling material change
 		if(move.startType > 6) {
@@ -162,18 +142,10 @@ public class Grid {
 		}
 		
 		//Castle status updates
-		if(move.bK) {
-			bK = false;
-		}
-		if(move.bQ) {
-			bQ = false;
-		}
-		if(move.wK) {
-			wK = false;
-		}
-		if(move.wQ) {
-			wQ = false;
-		}
+		if(move.bK) bK = false;
+		if(move.bQ) bQ = false;
+		if(move.wK) wK = false;
+		if(move.wQ) wQ = false;
 
 		//Handling material change
 		if(move.startType > 6) {
@@ -496,6 +468,14 @@ public class Grid {
 			}
 		}
 		return true;
+	}
+
+	public void changePromotion() {
+		if(promote < 5) {
+			promote++;
+		} else {
+			promote = 2;
+		}
 	}
 	
 	//Checks if pieces are the same color

@@ -8,7 +8,7 @@ require("dotenv").config()
 
 const deployed = process.env.DEPLOYED === "true";
 const app = express();
-const port = deployed ? 443 : 3002;
+const port = deployed ? 443 : 80;
 const BACKEND_WS_URL = "ws://localhost:3000";
 
 const privateKey = deployed ? fs.readFileSync(
@@ -28,8 +28,6 @@ server.listen(port, () => {
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (clientSocket) => {
-  //console.log("Browser client connected.");
-
   // Connect to Java backend
   const backendSocket = new WebSocket(BACKEND_WS_URL);
   const queuedMessages = [];
@@ -45,7 +43,6 @@ wss.on("connection", (clientSocket) => {
 
   backendSocket.on("message", (message) => {
     const msgStr = message.toString();
-    //console.log("From backend to client:", msgStr);
 
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.send(msgStr);
@@ -53,7 +50,6 @@ wss.on("connection", (clientSocket) => {
   });
 
   backendSocket.on("open", () => {
-    //console.log("Connected to Java backend.");
     for (const msg of queuedMessages) {
       backendSocket.send(msg);
     }
@@ -61,12 +57,10 @@ wss.on("connection", (clientSocket) => {
   });
 
   clientSocket.on("close", () => {
-    //console.log("Browser client disconnected.");
     backendSocket.close();
   });
 
   backendSocket.on("close", () => {
-    //console.log("Java backend disconnected.");
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.close();
     }

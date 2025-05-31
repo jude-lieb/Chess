@@ -16,8 +16,6 @@ public class Game {
 
     String[] names = {"blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
     		"wk.png", "bp.png","bn.png","bb.png","br.png","bq.png", "bk.png"};
-    
-    int[] promoteTypes = {2,3,4,5};
 
 	int[] set = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
@@ -32,10 +30,10 @@ public class Game {
     Crd[][] pieceMoves = new Crd[13][];
 
 	//Game board instance
-    Grid gameGrid;
+    Grid game;
 
     public Game() {
-        //Preparing to read x and y shifts for each pieces' moves
+        //Preparing to read x and y shifts for each piece's moves
         File file = new File("vectors.txt");
 
 		try {
@@ -67,18 +65,18 @@ public class Game {
 
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
-			gameGrid.undoMove();
-			gameGrid.undoMove();
-			getOptions(conn);
+			game.undoMove();
+			game.undoMove();
+			game.findLegalMoves();
 			sendBoard(conn);
 			getOptions(conn);
 		} else if(desc.equals("promote")) {
-			changePromotion();
+			game.changePromotion();
 			sendPromote(conn);
 		} else if(desc.equals("reset")) {
 			reset();
-            sendBoard(conn);
-            sendPromote(conn);
+			sendBoard(conn);
+			sendPromote(conn);
 			getOptions(conn);
 		}
 	}
@@ -87,19 +85,19 @@ public class Game {
 		CrdPair chosenMove = new CrdPair(move.getInt(0), move.getInt(1), 
 			move.getInt(2), move.getInt(3));
 
-		CrdPair result = gameGrid.isLegal(chosenMove);
+		CrdPair result = game.isLegal(chosenMove);
 		if(result != null) {
 			//Player move
-			gameGrid.move(new Move(gameGrid, result));
+			game.move(new Move(game, result));
 			sendBoard(conn);
-			gameGrid.findLegalMoves();
-			handleStatus(gameGrid.status(), conn);
+			game.findLegalMoves();
+			handleStatus(game.status(), conn);
 			
 			//Computer move response
-			gameGrid.compMove();
+			game.compMove();
 			sendBoard(conn);
-			gameGrid.findLegalMoves();
-			handleStatus(gameGrid.status(), conn);
+			game.findLegalMoves();
+			handleStatus(game.status(), conn);
 
 			getOptions(conn);
 		}
@@ -109,16 +107,16 @@ public class Game {
 		int[][] holder = new int[64][28];
 		int[] allowed = new int[64];
 
-		for (int i = 0; i < gameGrid.legalMoveCount; i++) {
-			Crd current = gameGrid.moves[i].getInit();
+		for (int i = 0; i < game.legalMoveCount; i++) {
+			Crd current = game.moves[i].getInit();
 			int start = (8 * current.y) + current.x;
 
 			holder[start][0] = start;
 			allowed[start] = 0;
 
-			for (int j = 0; j < gameGrid.legalMoveCount; j++) {
-				if (gameGrid.moves[j].getInit().equals(current)) {
-					holder[start][allowed[start]] = (8 * gameGrid.moves[j].endY) + gameGrid.moves[j].endX;
+			for (int j = 0; j < game.legalMoveCount; j++) {
+				if (game.moves[j].getInit().equals(current)) {
+					holder[start][allowed[start]] = (8 * game.moves[j].endY) + game.moves[j].endX;
 					allowed[start]++;
 				}
 			}
@@ -144,7 +142,7 @@ public class Game {
 	public void sendPromote(WebSocket conn) {
 		JSONObject message = new JSONObject();
 		message.put("desc", "promote");
-		message.put("value", gameGrid.promote);
+		message.put("value", game.promote);
 		conn.send(message.toString());
 	}
 
@@ -152,14 +150,14 @@ public class Game {
 		JSONArray boardState = new JSONArray();
 		for (int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
-				boardState.put(gameGrid.board[i][j]);
+				boardState.put(game.board[i][j]);
 			}
 		}
 
 		JSONObject message = new JSONObject();
 		message.put("desc", "boardState");
 		message.put("squares", boardState);
-		message.put("value", gameGrid.promote);
+		message.put("value", game.promote);
 
 		String jsonString = message.toString();
 		conn.send(jsonString);
@@ -183,15 +181,7 @@ public class Game {
 
 	//User game initialization
 	public void reset() {
-        gameGrid = new Grid(set, pieceMoves, values, 39, 39, 6, 5);
+        game = new Grid(set, pieceMoves, values, 39, 39, 6, 5);
     }
-	
-	public void changePromotion() {
-		if(gameGrid.promote < 5) {
-			gameGrid.promote++;
-		} else {
-			gameGrid.promote = 2;
-		}
-	}
 }
 
