@@ -1,9 +1,10 @@
 package project;
+import java.util.Arrays;
 
 public class MoveStack {
     private Move[] stackArray;
-    private int index;          
-    private int capacity;        
+    private int index;
+    private int capacity;
 
     public MoveStack() {
         stackArray = new Move[100];
@@ -12,10 +13,12 @@ public class MoveStack {
     }
 
     public void push(Move move) {
+        //resizing stack when full
         if (index == capacity - 1) {
-            System.out.println("Stack full.");
-            return;
+            capacity += 50;
+            stackArray = Arrays.copyOf(stackArray, capacity);
         }
+
         stackArray[++index] = move;
     }
 

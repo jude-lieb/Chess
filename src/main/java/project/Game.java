@@ -1,9 +1,9 @@
 package project;
 
-import java.util.*;
-import java.io.*;
-import org.java_websocket.WebSocket;
-import org.json.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Game {
 	int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -11,102 +11,161 @@ public class Game {
     
     int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
-    Crd[][] PIECE_MOVES = new Crd[13][];
+	Crd[][] PIECE_MOVES = new Crd[13][];
+
 	int INITIAL_PIECE_COUNT = 16;
 	int PIECE_TYPE_COUNT = 13;
 	int BOARD_SIZE = 8;
-	boolean BLACK = false;
-	boolean WHITE = true;
-	boolean START_COLOR = true;
-	boolean DEFAULT_PROMOTE_WHITE = true;
-	boolean DEFAULT_PROMOTE_BLACK = false;
-	boolean DEFAULT_HASMOVED = false;
-	boolean CASTLING_ENABLED = true;
-	boolean CASTLING_DISABLED = false;
+	int START_COLOR = 6;
 
-	int MIN_Y = MIN_X = 1;
-	int MAX_Y = MAX_X = BOARD_SIZE;
+	int MIN_Y = 1;
+	int MIN_X = 1;
+	int MAX_Y = BOARD_SIZE;
+	int MAX_X = BOARD_SIZE;
 	
-	MoveStack pastMoves;
-	CrdPair[] moves;
-	int[][] board;
-	int legalMoveCount, color, promote;
-	int bMat, wMat;
-	boolean bK, wK, bQ, wQ;
+	MoveStack stack;
+	ArrayList<Move> list;
+	Move chosenMove;
+	Player currentPlayer;
+	Player white;
+	Player black;
 
-	public CrdPair verifyChosenMove() {
-		for(int i = 0; i < 100 && moves[i] != null; i++) {
-			if(moves[i].equals(chosenMove)) {
-				return moves[i];
+	int[][] board;
+	int color;
+
+	public Move verifyChosenMove() {
+		for(int i = 0; i < list.size(); i++) {
+			if(list.get(i).isEqual(chosenMove)) {
+				return list.get(i);
 			}
 		}
 		return null;
 	}
 
 	public int getGameStatus() {
-		if(legalMoveCount == 0) {
-			return inCheck(color) ? CHECKMATE : STALEMATE;
+		if(list.isEmpty()) {
+			return isSquareAttacked(currentPlayer.king) ? 1 : 2;
 		} else {
-			return CAN_MOVE;
+			return 0;
 		}
 	}
 
+	public int materialDiff() {
+		return black.material - white.material;
+	}
+
+	public boolean inBounds(Crd dest) {
+		return (dest.y <= MAX_Y && dest.y >= MIN_Y) && (dest.x <= MAX_X && dest.x >= MIN_X);
+	}
+
+	//Incomplete
 	public void computerMove() {
-		if(legalMoveCount == 0) return;
-		Eval ev = new Eval(this);
-		move(ev.getBestMove());
+		
 	}
 
-	public void move() {
+	//Incomplete
+	public void move(Move mv) {
 
 	}
-
+	//Incomplete
 	public void undoMove() {
 
 	}
 
-	public int canEnPassant() {
-
+	//Incomplete
+	public void canEnPassant() {
+		
 	}
 
-	public boolean inBounds() {
-		return (dest.y <= MAX_Y && dest.y >= MIN_Y) && (dest.x <= MAX_X && dest.x >= MIN_X);
-	}
-
-	public int canCastle() {
-
+	//Incomplete
+	public void canCastle() {
+		
 	}
 
 	public void findLegalMoves() {
+		list.clear();
+		canCastle();
+		canEnPassant();
 
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				if(!diffColor(board[i][j], color)) {
+					Crd[] mvs = PIECE_MOVES[board[i][j]];
+					for(int q = 0; q < mvs.length; q++) {
+						Crd init = new Crd(i, j);
+						Crd mv = new Crd(i+mvs[q].y, j+mvs[q].x);
+						
+						if(inBounds(mv) && diffColor(color, board[mv.y][mv.x]) && systemChecks(init, mv)) {
+							int piece = board[init.y][init.x];
+							Mod start = new Mod(init, piece, 0);
+
+							//Checking for promotion and adjusting end location piece
+							if((piece == 1 || piece == 7) && (mv.y == 1 || mv.y == 7)) {
+								if(color < 7) {
+									piece = white.promoteType;
+								} else {
+									piece = black.promoteType;
+								}
+							}
+
+							Mod end = new Mod(mv, board[mv.y][mv.x], piece);
+
+							Move stat = new Move(this, start, end, null, null);
+							move(stat);
+							boolean result = !isSquareAttacked(currentPlayer.king);
+							undoMove();
+							
+							if(result) {
+								list.add(stat);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
-	public void isMoveLegal() {
-		
+	public boolean isSquareAttacked(Crd square) {
+		if(!inBounds(square))
+			return false;
+		int type, x, y;
+		for(int i = 0; i < 8; i++) {
+			for(int q = 0; q < 8; q++) {
+				type = board[i][q];
+				if(type != 0 && diffColor(type, color)) {
+					Crd[] moves = PIECE_MOVES[type];
+					for(int j = 0; j < moves.length; j++) {
+						x = q + moves[j].x;
+						y = i + moves[j].y;
+						if(inBounds(new Crd(y, x))) {
+							if(square.x == x && square.y == y) {
+								if(systemChecks(new Crd(i,q),new Crd(y, x))) {
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}	
+		return false;
 	}
 
-	public boolean inCheck() {
-
+	//Incomplete
+	public boolean systemChecks(Crd init, Crd mv) {
+		return true;
 	}
-
-	public boolean isSquareAttacked() {
-
-	}
-
-	public boolean systemChecks() {
-
-	}
-
+	//Incomplete
 	public boolean rookCheck() {
-
+		return true;
 	}
-
+	//Incomplete
 	public boolean bishopCheck() {
-		
+		return true;
 	}
-
+	//Incomplete
 	public boolean pawnCheck() {
-		
+		return true;
 	}
 
 	public void printBoard() {
@@ -118,26 +177,48 @@ public class Game {
 		}
 	}
 
+	public static boolean diffColor(int type1, int type2) { 
+		if(type2 != 0 && type1 != 0) {
+			if((type2 > 6 && type1 > 6) || (type2 <= 6 && type1 <= 6)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	public void reset() {
+		white = new Player("white");
+		black = new Player("black");
+
 		board = new int[BOARD_SIZE][BOARD_SIZE];
-		
+		int piece;
 		int count = 0; 
 		for(int i = 0; i < BOARD_SIZE; i++) {
 			for(int j = 0; j < BOARD_SIZE; j++) {
-				board[i][j] = SET[count];
+				piece = SET[count];
+				board[i][j] = piece;
+
+				//For king, set inital location
+				if(piece == 6 || piece == 12) {
+					if(piece == 6) {
+						white.king = new Crd(i, j);
+					} else {
+						black.king = new Crd(i, j);
+					}
+				} else { //For other pieces, add material value to total
+					if(SET[count] < 7) {
+						white.material += PIECE_VALUES[SET[count]];
+					} else {
+						black.material += PIECE_VALUES[SET[count]];
+					}
+				}
 				count++;
 			}
 		}
-		
 		color = START_COLOR;
-		promoteW = DEFAULT_PROMOTE_WHITE;
-		promoteB = DEFUALT_PROMOTE_BLACK;
-		bKingSide = wKingSide = CASTLING_ENABLED;
-		BQueenside = wQueenSide = CASTLING_ENABLED;
-
-		bMat = countMaterial(BLACK);
-		wMat = countMaterial(WHITE);
 		pastMoves = new MoveStack();
+		list = new ArrayList<>();
+		list.ensureCapacity(50);
 		findLegalMoves();
     }
 
@@ -147,15 +228,15 @@ public class Game {
 			int read_Y, read_X;
 
 			for(int i = 0; i < PIECE_TYPE_COUNT; i++) { 
-				pieceMoves[i] = new Crd[moveAmount[i]];
+				PIECE_MOVES[i] = new Crd[MOVE_COUNTS[i]];
 
 				if(i > 7) {
-					pieceMoves[i] = pieceMoves[i-INITIAL_PIECE_COUNT];
+					PIECE_MOVES[i] = PIECE_MOVES[i-INITIAL_PIECE_COUNT];
 				} else {
-					for(int j = 0; j < moveAmount[i]; j++) {
+					for(int j = 0; j < MOVE_COUNTS[i]; j++) {
 						read_Y = Integer.parseInt(scan.next());
 						read_X = Integer.parseInt(scan.next());
-						pieceMoves[i][j] = new Crd(read_Y, read_X);
+						PIECE_MOVES[i][j] = new Crd(read_Y, read_X);
 					}
 				}
 			}
