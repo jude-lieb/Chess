@@ -5,53 +5,157 @@ import java.io.*;
 import org.java_websocket.WebSocket;
 import org.json.*;
 
-/**
- * Game class
- * Holds information for a single client's game connection
- * Initialization and resetting of games
- * Processes user input
- */
-
 public class Game {
-
-    String[] names = {"blank.jpg", "wp.png", "wn.png","wb.png","wr.png","wq.png",
-    		"wk.png", "bp.png","bn.png","bb.png","br.png","bq.png", "bk.png"};
-
-	int[] set = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-    //Number of potential moves for each piece
-    int[] moveAmount = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
+    int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
+	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
+    Crd[][] PIECE_MOVES = new Crd[13][];
+	int INITIAL_PIECE_COUNT = 16;
+	int PIECE_TYPE_COUNT = 13;
+	int BOARD_SIZE = 8;
+	boolean BLACK = false;
+	boolean WHITE = true;
+	boolean START_COLOR = true;
+	boolean DEFAULT_PROMOTE_WHITE = true;
+	boolean DEFAULT_PROMOTE_BLACK = false;
+	boolean DEFAULT_HASMOVED = false;
+	boolean CASTLING_ENABLED = true;
+	boolean CASTLING_DISABLED = false;
 
-    //Relative material values of pieces (king arbitrary)
-	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
-	   
-    //Stores possible move coordinate shifts for each type
-    Crd[][] pieceMoves = new Crd[13][];
+	int MIN_Y = MIN_X = 1;
+	int MAX_Y = MAX_X = BOARD_SIZE;
+	
+	MoveStack pastMoves;
+	CrdPair[] moves;
+	int[][] board;
+	int legalMoveCount, color, promote;
+	int bMat, wMat;
+	boolean bK, wK, bQ, wQ;
 
-	//Game board instance
-    Grid game;
+	public CrdPair verifyChosenMove() {
+		for(int i = 0; i < 100 && moves[i] != null; i++) {
+			if(moves[i].equals(chosenMove)) {
+				return moves[i];
+			}
+		}
+		return null;
+	}
 
-    public Game() {
-        //Preparing to read x and y shifts for each piece's moves
-        File file = new File("vectors.txt");
+	public int getGameStatus() {
+		if(legalMoveCount == 0) {
+			return inCheck(color) ? CHECKMATE : STALEMATE;
+		} else {
+			return CAN_MOVE;
+		}
+	}
 
+	public void computerMove() {
+		if(legalMoveCount == 0) return;
+		Eval ev = new Eval(this);
+		move(ev.getBestMove());
+	}
+
+	public void move() {
+
+	}
+
+	public void undoMove() {
+
+	}
+
+	public int canEnPassant() {
+
+	}
+
+	public boolean inBounds() {
+		return (dest.y <= MAX_Y && dest.y >= MIN_Y) && (dest.x <= MAX_X && dest.x >= MIN_X);
+	}
+
+	public int canCastle() {
+
+	}
+
+	public void findLegalMoves() {
+
+	}
+
+	public void isMoveLegal() {
+		
+	}
+
+	public boolean inCheck() {
+
+	}
+
+	public boolean isSquareAttacked() {
+
+	}
+
+	public boolean systemChecks() {
+
+	}
+
+	public boolean rookCheck() {
+
+	}
+
+	public boolean bishopCheck() {
+		
+	}
+
+	public boolean pawnCheck() {
+		
+	}
+
+	public void printBoard() {
+		for(int i = 0; i < 8; i++) {
+			System.out.println();
+			for(int j = 0; j < 8; j++) {
+				System.out.printf("%-2s ", board[i][j] != 0 ? board[i][j] : "_");
+			}
+		}
+	}
+
+	public void reset() {
+		board = new int[BOARD_SIZE][BOARD_SIZE];
+		
+		int count = 0; 
+		for(int i = 0; i < BOARD_SIZE; i++) {
+			for(int j = 0; j < BOARD_SIZE; j++) {
+				board[i][j] = SET[count];
+				count++;
+			}
+		}
+		
+		color = START_COLOR;
+		promoteW = DEFAULT_PROMOTE_WHITE;
+		promoteB = DEFUALT_PROMOTE_BLACK;
+		bKingSide = wKingSide = CASTLING_ENABLED;
+		BQueenside = wQueenSide = CASTLING_ENABLED;
+
+		bMat = countMaterial(BLACK);
+		wMat = countMaterial(WHITE);
+		pastMoves = new MoveStack();
+		findLegalMoves();
+    }
+
+	public Game() {
 		try {
-			Scanner scan = new Scanner(file);
-			int readInt1, readInt2;
+			Scanner scan = new Scanner(new File("vectors.txt"));
+			int read_Y, read_X;
 
-			//Creating each piece type
-			//Reading all potential piece coordinate shifts from text file
-			for(int i = 0; i < 13; i++) { 
+			for(int i = 0; i < PIECE_TYPE_COUNT; i++) { 
 				pieceMoves[i] = new Crd[moveAmount[i]];
 
 				if(i > 7) {
-					pieceMoves[i] = pieceMoves[i-6];
+					pieceMoves[i] = pieceMoves[i-INITIAL_PIECE_COUNT];
 				} else {
 					for(int j = 0; j < moveAmount[i]; j++) {
-						readInt1 = Integer.parseInt(scan.next());
-						readInt2 = Integer.parseInt(scan.next());
-						pieceMoves[i][j] = new Crd(readInt1, readInt2);
+						read_Y = Integer.parseInt(scan.next());
+						read_X = Integer.parseInt(scan.next());
+						pieceMoves[i][j] = new Crd(read_Y, read_X);
 					}
 				}
 			}
@@ -59,129 +163,6 @@ public class Game {
 		} catch (FileNotFoundException e) {
 			System.out.println("File Error");
 		}
-
-		reset();
-    }
-
-	public void handleCommand(String desc, WebSocket conn) {
-		if(desc.equals("undo")) {
-			game.undoMove();
-			game.undoMove();
-			game.findLegalMoves();
-			sendBoard(conn);
-			getOptions(conn);
-		} else if(desc.equals("promote")) {
-			game.changePromotion();
-			sendPromote(conn);
-		} else if(desc.equals("reset")) {
-			reset();
-			sendBoard(conn);
-			sendPromote(conn);
-			getOptions(conn);
-		}
-	}
-
-	public void handleCrdInput(JSONArray move, WebSocket conn) {		
-		CrdPair chosenMove = new CrdPair(move.getInt(0), move.getInt(1), 
-			move.getInt(2), move.getInt(3));
-
-		CrdPair result = game.isLegal(chosenMove);
-		if(result != null) {
-			//Player move
-			game.move(new Move(game, result));
-			sendBoard(conn);
-			game.findLegalMoves();
-			handleStatus(game.status(), conn);
-			
-			//Computer move response
-			game.compMove();
-			sendBoard(conn);
-			game.findLegalMoves();
-			handleStatus(game.status(), conn);
-
-			getOptions(conn);
-		}
-	}
-
-	public void getOptions(WebSocket conn) {
-		int[][] holder = new int[64][28];
-		int[] allowed = new int[64];
-
-		for (int i = 0; i < game.legalMoveCount; i++) {
-			Crd current = game.moves[i].getInit();
-			int start = (8 * current.y) + current.x;
-
-			holder[start][0] = start;
-			allowed[start] = 0;
-
-			for (int j = 0; j < game.legalMoveCount; j++) {
-				if (game.moves[j].getInit().equals(current)) {
-					holder[start][allowed[start]] = (8 * game.moves[j].endY) + game.moves[j].endX;
-					allowed[start]++;
-				}
-			}
-		}
-
-		JSONArray options = new JSONArray();
-		for (int i = 0; i < 64; i++) {
-			JSONArray moveset = new JSONArray();
-
-			for (int j = 0; j < allowed[i]; j++) {
-				moveset.put(holder[i][j]);
-			}
-			options.put(moveset);
-		}
-
-		JSONObject message = new JSONObject();
-		message.put("desc", "loadSelect");
-		message.put("options", options);
-		conn.send(message.toString());
-	}
-
-
-	public void sendPromote(WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "promote");
-		message.put("value", game.promote);
-		conn.send(message.toString());
-	}
-
-	public void sendBoard(WebSocket conn) {
-		JSONArray boardState = new JSONArray();
-		for (int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				boardState.put(game.board[i][j]);
-			}
-		}
-
-		JSONObject message = new JSONObject();
-		message.put("desc", "boardState");
-		message.put("squares", boardState);
-		message.put("value", game.promote);
-
-		String jsonString = message.toString();
-		conn.send(jsonString);
-	}
-
-	public void handleStatus(int status, WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "status");
-
-		if(status != 0) {
-			if(status == 1) {
-				message.put("status", "Draw by stalemate!");
-			} else {
-				message.put("status", "Checkmate!");
-			}
-		} else {
-			message.put("status", "   ");
-		}
-		conn.send(message.toString());
-	}
-
-	//User game initialization
-	public void reset() {
-        game = new Grid(set, pieceMoves, values, 39, 39, 6, 5);
     }
 }
 
