@@ -19,4 +19,12 @@ public class Player {
             promoteType = 11;
         }
 	}
+
+    public void changePromotion() {
+		if(promoteType < 5) {
+			promoteType++;
+		} else {
+			promoteType = 2;
+		}
+	}
 }
