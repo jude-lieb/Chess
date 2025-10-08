@@ -25,10 +25,13 @@ public class Server extends WebSocketServer {
 		//Adding game to session map
 		Game newGame = new Game();
 		games.put(conn, newGame);
-
-		//newGame.sendBoard(conn);
-        //newGame.getOptions(conn);
-		//newGame.sendPromote(conn);
+       
+        newGame.reset();
+        newGame.sendBoard(conn);
+        newGame.updateGameStatus();
+        newGame.handleStatus(conn);
+        newGame.getOptions(conn);
+		newGame.sendPromote(conn);
     }
 
     @Override

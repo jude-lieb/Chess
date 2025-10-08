@@ -4,7 +4,9 @@ public class Move {
 	Mod start, end, s1, s2;
 	Game game;
 	int bMatChange, wMatChange;
+	boolean color;
 	boolean wK, wQ, bK, bQ;
+	int passant;
 
 
 	public Move(Game game, Mod a, Mod b, Mod c, Mod d) {
@@ -14,11 +16,14 @@ public class Move {
 		this.s1 = c;
 		this.s2 = d;
 
-		if(start.type < 7) { //White
-
-		} else { //Black
-
+		//Setting en passant potential marker
+		if((start.type == 1 || start.type == 7) && (Math.abs(start.square.y - end.square.y) == 2)) {
+			passant = end.square.x;
+		} else {
+			passant = -1;
 		}
+
+		color = start.type < 7; //White
 	}
 
 	public void enter() {
@@ -26,8 +31,12 @@ public class Move {
 		end.apply(game.board);
 		if(s1 != null) 
 			s1.apply(game.board);
-		if(s1 != null) 
+		if(s2 != null) 
 			s2.apply(game.board);
+
+		if(start.type == 6 || start.type == 12) {
+            game.currentPlayer.king = end.square;
+        }
 	}
 
 	public void undo() {
@@ -35,9 +44,19 @@ public class Move {
 		end.reverse(game.board);
 		if(s1 != null) 
 			s1.reverse(game.board);
-		if(s1 != null) 
+		if(s2 != null) 
 			s2.reverse(game.board);
+
+		if(start.type == 6 || start.type == 12) {
+			game.currentPlayer.king = start.square;
+        }
 	}
+
+	public void print() {
+		System.out.println("Move: Type = " + start.type);
+		start.square.print();
+		end.square.print();
+    }
 
 	public boolean isEqual(Crd init, Crd dest) {
 		return init.equals(start.square) && dest.equals(end.square);
@@ -48,6 +67,6 @@ public class Move {
 	}
 
 	public Crd getDest() {
-		return start.square;
+		return end.square;
 	}
 }

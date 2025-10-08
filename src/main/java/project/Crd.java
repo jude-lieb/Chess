@@ -10,4 +10,8 @@ public class Crd {
 	public boolean equals(Crd crd) {
 		return crd.y == y && crd.x == x;
 	}
+
+	public void print() {
+		System.out.printf("Crd: y = %d, x = %d\n", y, x);
+	}
 }

@@ -19,11 +19,6 @@ public class Game {
 
 	int BOARD_SIZE = 8;
 	int START_COLOR = 6;
-
-	int MIN_Y = 1;
-	int MIN_X = 1;
-	int MAX_Y = BOARD_SIZE;
-	int MAX_X = BOARD_SIZE;
 	
 	MoveStack stack;
 	ArrayList<Move> list;
@@ -46,7 +41,7 @@ public class Game {
 
 	public void updateGameStatus() {
 		if(list.isEmpty()) {
-			status = isSquareAttacked(currentPlayer.king) ? 1 : 2;
+			status = isSquareAttacked(currentPlayer.king, color) ? 1 : 2;
 		} else {
 			status = 0;
 		}
@@ -57,7 +52,7 @@ public class Game {
 	}
 
 	public boolean inBounds(Crd dest) {
-		return (dest.y <= MAX_Y && dest.y >= MIN_Y) && (dest.x <= MAX_X && dest.x >= MIN_X);
+		return (dest.y < 8 && dest.y > -1) && (dest.x < 8 && dest.x > -1);
 	}
 
 	//Incomplete
@@ -68,17 +63,86 @@ public class Game {
 	//Incomplete
 	public void move(Move mv) {
 		mv.enter();
+		stack.push(mv);
+		changeTurn();
+	}
+
+	public void changeTurn() {
+		if(color < 7) {
+			currentPlayer = black;
+			black.isTurn = true;
+			white.isTurn = false;
+			color = 12;
+		} else {
+			currentPlayer = white;
+			white.isTurn = true;
+			black.isTurn = false;
+			color = 6;
+		}
 	}
 
 	//Incomplete
 	public void undoMove() {
 		Move mv = stack.pop();
+		if(mv == null) 
+			return;
 		mv.undo();
+		changeTurn();
 	}
 
 	//Incomplete
 	public void canEnPassant() {
+		Move temp = stack.peek();
 		
+		if(temp == null) 
+			return;
+
+		int passant = temp.passant;
+		if(passant != -1) {
+			int direction = 0;
+			int typ, rep, col1, col2;
+			int count = 0;
+			
+			if(color < 7) {
+				typ = 1;
+				rep = 7;
+				col1 = 3;
+				col2 = 2;
+				if(passant > 0 && board[3][passant - 1] == 1) {
+					direction = -1;
+					count++;
+				}
+				if(passant < 7 && board[3][passant + 1] == 1) {
+					direction = 1;
+					count++;
+				}
+			} else {
+				typ = 7;
+				rep = 1;
+				col1 = 4;
+				col2 = 5;
+				if(passant > 0 && board[4][passant - 1] == 7) {
+					direction = -1;
+					count++;
+				} 
+				if(passant < 7 && board[4][passant + 1] == 7) {
+					direction = 1;
+					count++;
+				}
+			}
+
+			if(direction != 0) {
+				Mod start = new Mod(new Crd(col1, passant + direction), typ, 0);
+				Mod end = new Mod(new Crd(col2, passant), 0, typ);
+				Mod pass = new Mod(new Crd(col1, passant), rep, 0);
+				Move insert = new Move(this, start, end, pass, null);
+				list.add(insert);
+				if(count > 1) {
+					Mod start1 = new Mod(new Crd(col1, passant - direction), typ, 0);
+					list.add(new Move(this, start1, end, pass, null));
+				}
+			}
+		}
 	}
 
 	//Incomplete
@@ -89,17 +153,22 @@ public class Game {
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
 			undoMove();
-			undoMove();
 			findLegalMoves();
 			sendBoard(conn);
+			updateGameStatus();
+			handleStatus(conn);
 			getOptions(conn);
 		} else if(desc.equals("promote")) {
 			white.changePromotion();
 			sendPromote(conn);
 		} else if(desc.equals("reset")) {
 			reset();
+			findLegalMoves();
+			printBoard();
 			sendBoard(conn);
 			sendPromote(conn);
+			updateGameStatus();
+			handleStatus(conn);
 			getOptions(conn);
 		}
 	}
@@ -114,14 +183,14 @@ public class Game {
 			move(result);
 			sendBoard(conn);
 			findLegalMoves();
+			updateGameStatus();
 			handleStatus(conn);
 			
 			//Computer move response
-			computerMove();
-			sendBoard(conn);
-			findLegalMoves();
-			handleStatus(conn);
-
+			// computerMove();
+			// sendBoard(conn);
+			// findLegalMoves();
+			//handleStatus(conn);
 			getOptions(conn);
 		}
 	}
@@ -192,17 +261,18 @@ public class Game {
 
 		if(status != 0) {
 			if(status == 1) {
-				message.put("status", "Draw by stalemate!");
-			} else {
 				message.put("status", "Checkmate!");
+			} else {
+				message.put("status", "Draw by stalemate!");
 			}
 		} else {
-			message.put("status", "   ");
+			message.put("status", "Legal Moves: " + list.size());
 		}
 		conn.send(message.toString());
 	}
 
 	public void findLegalMoves() {
+		int ctemp = color;
 		list.clear();
 		canCastle();
 		canEnPassant();
@@ -211,16 +281,17 @@ public class Game {
 			for(int j = 0; j < 8; j++) {
 				if(!diffColor(board[i][j], color)) {
 					Crd[] mvs = PIECE_MOVES[board[i][j]];
+					//System.out.println(board[i][j]);
 					for(int q = 0; q < mvs.length; q++) {
 						Crd init = new Crd(i, j);
 						Crd mv = new Crd(i+mvs[q].y, j+mvs[q].x);
-						
+						//System.out.println(mv.y + " " + mv.x);
 						if(inBounds(mv) && diffColor(color, board[mv.y][mv.x]) && systemChecks(init, mv)) {
 							int piece = board[init.y][init.x];
 							Mod start = new Mod(init, piece, 0);
 
 							//Checking for promotion and adjusting end location piece
-							if((piece == 1 || piece == 7) && (mv.y == 1 || mv.y == 7)) {
+							if((piece == 1 || piece == 7) && (mv.y == 0 || mv.y == 7)) {
 								if(color < 7) {
 									piece = white.promoteType;
 								} else {
@@ -231,9 +302,9 @@ public class Game {
 							Mod end = new Mod(mv, board[mv.y][mv.x], piece);
 						
 							Move stat = new Move(this, start, end, null, null);
-							move(stat);
-							boolean result = !isSquareAttacked(currentPlayer.king);
-							undoMove();
+							stat.enter();
+							boolean result = !isSquareAttacked(currentPlayer.king, ctemp);
+							stat.undo();
 							
 							if(result) {
 								list.add(stat);
@@ -245,7 +316,7 @@ public class Game {
 		}
 	}
 
-	public boolean isSquareAttacked(Crd square) {
+	public boolean isSquareAttacked(Crd square, int color) {
 		if(!inBounds(square))
 			return false;
 		int type, x, y;
@@ -429,6 +500,9 @@ public class Game {
 	public void reset() {
 		white = new Player("white");
 		black = new Player("black");
+		currentPlayer = white;
+		white.isTurn = true;
+		black.isTurn = false;
 
 		board = new int[BOARD_SIZE][BOARD_SIZE];
 		int piece;
@@ -468,7 +542,6 @@ public class Game {
 			int read_Y, read_X;
 
 			for(int i = 0; i < 13; i++) { 
-				System.out.println(i);
 				PIECE_MOVES[i] = new Crd[MOVE_COUNTS[i]];
 
 				if(i > 7) {

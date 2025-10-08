@@ -34,6 +34,7 @@ wss.on("connection", (clientSocket) => {
 
   clientSocket.on("message", (message) => {
     const msgStr = message.toString();
+   
     if (backendSocket.readyState === WebSocket.OPEN) {
       backendSocket.send(msgStr);
     } else {
@@ -43,7 +44,7 @@ wss.on("connection", (clientSocket) => {
 
   backendSocket.on("message", (message) => {
     const msgStr = message.toString();
-
+    console.log("message: ", msgStr)
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.send(msgStr);
     }

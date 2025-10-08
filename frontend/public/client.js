@@ -61,6 +61,14 @@ setInterval(() => {
 
 function undo() {
   socket.send(JSON.stringify({ desc: "undo" }))
+  clearOutlines()
+}
+
+function clearOutlines() {
+  for(square of grid.children) {
+    square.classList.remove("red-outline")
+    square.classList.remove("green-outline")
+  }
 }
 
 function promote() {
@@ -78,10 +86,7 @@ function reset() {
   mode = true
   options = []
   socket.send(JSON.stringify({ desc: "reset" }))
-  for(square of grid.children) {
-    square.classList.remove("red-outline")
-    square.classList.remove("green-outline")
-  }
+  clearOutlines()
 }
 
 function handleJSON(data) {
