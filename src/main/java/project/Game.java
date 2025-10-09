@@ -13,6 +13,9 @@ public class Game {
 	int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
+	// int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	//  	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,0,0,0,6,0,0,4};
+
     int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	Crd[][] PIECE_MOVES = new Crd[13][];
@@ -22,6 +25,7 @@ public class Game {
 	
 	MoveStack stack;
 	ArrayList<Move> list;
+	Eval eval;
 	Player currentPlayer;
 	Player white;
 	Player black;
@@ -57,7 +61,10 @@ public class Game {
 
 	//Incomplete
 	public void computerMove() {
-		
+		eval.pickBestMove();
+		if(!list.isEmpty()) {
+			move(list.get(0));
+		}
 	}
 
 	//Incomplete
@@ -147,11 +154,72 @@ public class Game {
 
 	//Incomplete
 	public void canCastle() {
-		
+		if(color < 7) {
+			if(white.kingside) {
+				if(board[7][5] == 0 && board[7][6] == 0) {
+					if(!isSquareAttacked(new Crd(7, 5), color) &&
+						!isSquareAttacked(new Crd(7, 6), color)) {
+						Mod start = new Mod(new Crd(7, 4), 6, 0);
+						Mod end = new Mod(new Crd(7, 6), 0, 6);
+						Mod s1 = new Mod(new Crd(7, 7), 4, 0);
+						Mod s2 = new Mod(new Crd(7, 5), 0, 4);
+						Move mv = new Move(this, start, end, s1, s2);
+						list.add(mv);
+					}
+				}
+			}
+			if(white.queenside) {
+				if(board[7][2] == 0 && board[7][3] == 0 && board[7][1] == 0) {
+					if(!isSquareAttacked(new Crd(7, 3), color) &&
+						!isSquareAttacked(new Crd(7, 2), color) &&
+							!isSquareAttacked(new Crd(7,1), color)) {
+						Mod start = new Mod(new Crd(7, 4), 6, 0);
+						Mod end = new Mod(new Crd(7, 2), 0, 6);
+						Mod s1 = new Mod(new Crd(7, 0), 4, 0);
+						Mod s2 = new Mod(new Crd(7, 3), 0, 4);
+						Move mv = new Move(this, start, end, s1, s2);
+						list.add(mv);
+					}
+				}
+			}
+		} else {
+			if(black.kingside) {
+				if(board[0][5] == 0 && board[0][6] == 0) {
+					if(!isSquareAttacked(new Crd(0, 5), color) &&
+						!isSquareAttacked(new Crd(0, 6), color)) {
+						Mod start = new Mod(new Crd(0, 4), 12, 0);
+						Mod end = new Mod(new Crd(0, 6), 0, 12);
+						Mod s1 = new Mod(new Crd(0, 7), 10, 0);
+						Mod s2 = new Mod(new Crd(0, 5), 0, 10);
+						Move mv = new Move(this, start, end, s1, s2);
+						list.add(mv);
+					}
+				}
+			}
+			if(black.queenside) {
+				if(board[0][2] == 0 && board[0][3] == 0 && board[0][1] == 0) {
+					if(!isSquareAttacked(new Crd(0, 3), color) &&
+						!isSquareAttacked(new Crd(0, 2), color) &&
+							!isSquareAttacked(new Crd(0,1), color)) {
+						Mod start = new Mod(new Crd(0, 10), 12, 0);
+						Mod end = new Mod(new Crd(0, 2), 0, 12);
+						Mod s1 = new Mod(new Crd(0, 0), 10, 0);
+						Mod s2 = new Mod(new Crd(0, 3), 0, 10);
+						Move mv = new Move(this, start, end, s1, s2);
+						list.add(mv);
+					}
+				}
+			}
+		}
+	}
+
+	public void castleEnterMove() {
+
 	}
 
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
+			undoMove();
 			undoMove();
 			findLegalMoves();
 			sendBoard(conn);
@@ -159,7 +227,9 @@ public class Game {
 			handleStatus(conn);
 			getOptions(conn);
 		} else if(desc.equals("promote")) {
-			white.changePromotion();
+			currentPlayer.changePromotion();
+			findLegalMoves();
+			getOptions(conn);
 			sendPromote(conn);
 		} else if(desc.equals("reset")) {
 			reset();
@@ -183,15 +253,18 @@ public class Game {
 			move(result);
 			sendBoard(conn);
 			findLegalMoves();
+			//System.out.println("Material " + white.material + " " + black.material);
 			updateGameStatus();
 			handleStatus(conn);
 			
 			//Computer move response
-			// computerMove();
-			// sendBoard(conn);
-			// findLegalMoves();
-			//handleStatus(conn);
+			computerMove();
+			sendBoard(conn);
+			findLegalMoves();
+			updateGameStatus();
+			handleStatus(conn);
 			getOptions(conn);
+			//System.out.println("Material " + white.material + " " + black.material);
 		}
 	}
 
@@ -529,11 +602,32 @@ public class Game {
 				count++;
 			}
 		}
+
+		//Initial castling status
+		if(board[0][4] == 12) {
+			if(board[0][0] == 10) {
+				black.kingside = true;
+			} 
+			if(board[0][7] == 10) {
+				black.queenside = true;
+			}
+		}
+		if(board[7][4] == 6) {
+			if(board[7][0] == 4) {
+				white.queenside = true;
+			} 
+			if(board[7][7] == 4) {
+				white.kingside = true;
+			}
+		}
+
 		color = START_COLOR;
 		stack = new MoveStack();
 		list = new ArrayList<>();
 		list.ensureCapacity(50);
+		eval = new Eval(this);
 		findLegalMoves();
+		//System.out.println("Material " + white.material + " " + black.material);
     }
 
 	public Game() {
