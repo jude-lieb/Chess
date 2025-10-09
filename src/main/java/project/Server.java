@@ -1,12 +1,14 @@
 package project;
 
-import java.util.*;
+import java.net.InetSocketAddress;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import org.java_websocket.server.WebSocketServer;
+
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
-import java.net.InetSocketAddress;
-import org.json.*;
+import org.java_websocket.server.WebSocketServer;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class Server extends WebSocketServer {
 
@@ -23,8 +25,11 @@ public class Server extends WebSocketServer {
 		//Adding game to session map
 		Game newGame = new Game();
 		games.put(conn, newGame);
-
-		newGame.sendBoard(conn);
+       
+        newGame.reset();
+        newGame.sendBoard(conn);
+        newGame.updateGameStatus();
+        newGame.handleStatus(conn);
         newGame.getOptions(conn);
 		newGame.sendPromote(conn);
     }
