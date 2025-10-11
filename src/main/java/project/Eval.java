@@ -1,12 +1,13 @@
 package project;
+import java.util.ArrayList;
 import java.util.Random;
+
 /**
  * Eval Class
  * Scans legal move tree for high scoring moves.
  * Sorts moves by score and randomly breaks ties
  */
 public class Eval {
-	int[] values = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	int totalCount = 0;
     Game g;
 
@@ -23,7 +24,9 @@ public class Eval {
 		}
 
 		//Setting up move array and count
-		int moveCount = g.list.size();
+		ArrayList<Move> options = new ArrayList<>();
+		g.findLegalMoves(options);
+		int moveCount = options.size();
 		
 		//maximizing black score
 		if (g.color > 6){
@@ -32,7 +35,7 @@ public class Eval {
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
 				//Moving to new position for analysis
-                Move stat = g.list.get(i);
+                Move stat = options.get(i);
 				g.move(stat);
 				
 				//Recursive call to next position (then undo move)
@@ -54,7 +57,7 @@ public class Eval {
 			
 			//Recursively searching each move in array
 			for (int i = 0; i < moveCount; i++){
-				Move stat = g.list.get(i);
+				Move stat = options.get(i);
 				g.move(stat);
 				
 				//Recursive call to next position (then undo move)

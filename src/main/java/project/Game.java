@@ -221,19 +221,19 @@ public class Game {
 		if(desc.equals("undo")) {
 			undoMove();
 			undoMove();
-			findLegalMoves();
+			findLegalMoves(list);
 			sendBoard(conn);
 			updateGameStatus();
 			handleStatus(conn);
 			getOptions(conn);
 		} else if(desc.equals("promote")) {
 			currentPlayer.changePromotion();
-			findLegalMoves();
+			findLegalMoves(list);
 			getOptions(conn);
 			sendPromote(conn);
 		} else if(desc.equals("reset")) {
 			reset();
-			findLegalMoves();
+			findLegalMoves(list);
 			printBoard();
 			sendBoard(conn);
 			sendPromote(conn);
@@ -252,7 +252,7 @@ public class Game {
 			//Player move
 			move(result);
 			sendBoard(conn);
-			findLegalMoves();
+			findLegalMoves(list);
 			//System.out.println("Material " + white.material + " " + black.material);
 			updateGameStatus();
 			handleStatus(conn);
@@ -260,7 +260,7 @@ public class Game {
 			//Computer move response
 			computerMove();
 			sendBoard(conn);
-			findLegalMoves();
+			findLegalMoves(list);
 			updateGameStatus();
 			handleStatus(conn);
 			getOptions(conn);
@@ -344,7 +344,7 @@ public class Game {
 		conn.send(message.toString());
 	}
 
-	public void findLegalMoves() {
+	public void findLegalMoves(ArrayList list) {
 		int ctemp = color;
 		list.clear();
 		canCastle();
@@ -626,7 +626,7 @@ public class Game {
 		list = new ArrayList<>();
 		list.ensureCapacity(50);
 		eval = new Eval(this);
-		findLegalMoves();
+		findLegalMoves(list);
 		//System.out.println("Material " + white.material + " " + black.material);
     }
 
