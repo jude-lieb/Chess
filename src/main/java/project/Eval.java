@@ -4,7 +4,7 @@ import java.util.Random;
 
 /**
  * Eval Class
- * Scans legal move tree for high scoring moves.
+ * Scans legal move tree for high scoring moves
  * Sorts moves by score and randomly breaks ties
  */
 public class Eval {
@@ -135,15 +135,6 @@ public class Eval {
 			Move temp1 = g.list.get(0);
 			g.list.set(0, g.list.get(index));
 			g.list.set(index, temp1);
-		}
-	}
-	
-	//Gets opposite color
-	public static int otherColor(int color) {
-		if(color > 6) {
-			return 6;
-		} else {
-			return 12;
 		}
 	}
 }

@@ -6,7 +6,6 @@ public class Player {
     int promoteType;
     boolean queenside;
     boolean kingside;
-    boolean isTurn;
 
 	public Player(String type) {
         material = 0;
