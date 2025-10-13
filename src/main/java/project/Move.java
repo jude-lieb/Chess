@@ -14,12 +14,12 @@ public class Move {
 	static Crd bQRook = new Crd(0,0);
 	static Crd bKRook = new Crd(0,7);
 
-	public Move(Game game, Mod a, Mod b, Mod c, Mod d) {
+	public Move(Game game, Mod[] params) {
 		this.game = game;
-		this.start = a;
-		this.end = b;
-		this.s1 = c;
-		this.s2 = d;
+		this.start = params[0];
+		this.end = params[1];
+		this.s1 = params[2];
+		this.s2 = params[3];
 
 		if(s2 == null) {
 			if(s1 != null) {

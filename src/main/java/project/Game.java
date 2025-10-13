@@ -10,10 +10,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Game {
-	int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
-
-    int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
+    
+	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	int BOARD_SIZE = 8;
 	int START_COLOR = 6;
@@ -91,9 +91,7 @@ public class Game {
 
 	public void canEnPassant() {
 		Move temp = stack.peek();
-		
-		if(temp == null) 
-			return;
+		if(temp == null) return;
 
 		int passant = temp.passant;
 		if(passant != -1) {
@@ -130,14 +128,16 @@ public class Game {
 			}
 
 			if(direction != 0) {
-				Mod start = new Mod(new Crd(col1, passant + direction), typ, 0);
-				Mod end = new Mod(new Crd(col2, passant), 0, typ);
-				Mod pass = new Mod(new Crd(col1, passant), rep, 0);
-				Move insert = new Move(this, start, end, pass, null);
+				Mod[] params = new Mod[4];
+				params[0] = new Mod(new Crd(col1, passant + direction), typ, 0);
+				params[1] = new Mod(new Crd(col2, passant), 0, typ);
+				params[2] = new Mod(new Crd(col1, passant), rep, 0);
+
+				Move insert = new Move(this, params);
 				list.add(insert);
 				if(count > 1) {
-					Mod start1 = new Mod(new Crd(col1, passant - direction), typ, 0);
-					list.add(new Move(this, start1, end, pass, null));
+					params[0] = new Mod(new Crd(col1, passant - direction), typ, 0);
+					list.add(new Move(this, params));
 				}
 			}
 		}
@@ -151,11 +151,7 @@ public class Game {
 				if(board[7][5] == 0 && board[7][6] == 0) {
 					if(!isSquareAttacked(new Crd(7, 5), color) &&
 						!isSquareAttacked(new Crd(7, 6), color)) {
-						Mod start = new Mod(new Crd(7, 4), 6, 0);
-						Mod end = new Mod(new Crd(7, 6), 0, 6);
-						Mod s1 = new Mod(new Crd(7, 7), 4, 0);
-						Mod s2 = new Mod(new Crd(7, 5), 0, 4);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, white.ks);
 						list.add(mv);
 					}
 				}
@@ -165,11 +161,7 @@ public class Game {
 					if(!isSquareAttacked(new Crd(7, 3), color) &&
 						!isSquareAttacked(new Crd(7, 2), color) &&
 							!isSquareAttacked(new Crd(7,1), color)) {
-						Mod start = new Mod(new Crd(7, 4), 6, 0);
-						Mod end = new Mod(new Crd(7, 2), 0, 6);
-						Mod s1 = new Mod(new Crd(7, 0), 4, 0);
-						Mod s2 = new Mod(new Crd(7, 3), 0, 4);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, white.qs);
 						list.add(mv);
 					}
 				}
@@ -179,11 +171,7 @@ public class Game {
 				if(board[0][5] == 0 && board[0][6] == 0) {
 					if(!isSquareAttacked(new Crd(0, 5), color) &&
 						!isSquareAttacked(new Crd(0, 6), color)) {
-						Mod start = new Mod(new Crd(0, 4), 12, 0);
-						Mod end = new Mod(new Crd(0, 6), 0, 12);
-						Mod s1 = new Mod(new Crd(0, 7), 10, 0);
-						Mod s2 = new Mod(new Crd(0, 5), 0, 10);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, black.ks);
 						list.add(mv);
 					}
 				}
@@ -193,11 +181,7 @@ public class Game {
 					if(!isSquareAttacked(new Crd(0, 3), color) &&
 						!isSquareAttacked(new Crd(0, 2), color) &&
 							!isSquareAttacked(new Crd(0,1), color)) {
-						Mod start = new Mod(new Crd(0, 4), 12, 0);
-						Mod end = new Mod(new Crd(0, 2), 0, 12);
-						Mod s1 = new Mod(new Crd(0, 0), 10, 0);
-						Mod s2 = new Mod(new Crd(0, 3), 0, 10);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, black.qs);
 						list.add(mv);
 					}
 				}
@@ -215,14 +199,14 @@ public class Game {
 			for(int j = 0; j < 8; j++) {
 				if(!diffColor(board[i][j], color)) {
 					Crd[] mvs = PIECE_MOVES[board[i][j]];
-					//System.out.println(board[i][j]);
 					for(int q = 0; q < mvs.length; q++) {
 						Crd init = new Crd(i, j);
 						Crd mv = new Crd(i+mvs[q].y, j+mvs[q].x);
 						//System.out.println(mv.y + " " + mv.x);
 						if(inBounds(mv) && diffColor(color, board[mv.y][mv.x]) && systemChecks(init, mv)) {
 							int piece = board[init.y][init.x];
-							Mod start = new Mod(init, piece, 0);
+							Mod[] params = new Mod[4];
+							params[0] = new Mod(init, piece, 0);
 
 							//Checking for promotion and adjusting end location piece
 							if((piece == 1 || piece == 7) && (mv.y == 0 || mv.y == 7)) {
@@ -233,16 +217,14 @@ public class Game {
 								}
 							}
 
-							Mod end = new Mod(mv, board[mv.y][mv.x], piece);
-						
-							Move stat = new Move(this, start, end, null, null);
+							params[1] = new Mod(mv, board[mv.y][mv.x], piece);
+							Move stat = new Move(this, params);
+
 							stat.enter();
 							boolean result = !isSquareAttacked(currentPlayer.king, ctemp);
 							stat.undo();
 							
-							if(result) {
-								list.add(stat);
-							}
+							if(result) list.add(stat);
 						}
 					}
 				}
@@ -460,8 +442,8 @@ public class Game {
 	public void handleCrdInput(JSONArray move, WebSocket conn) {		
 		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
 		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
-
 		Move result = isMoveLegal(temp1, temp2);
+
 		if(result != null) {
 			//Player move
 			move(result);
