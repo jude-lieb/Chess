@@ -507,8 +507,13 @@ public class Game {
 				message.put("status", "Draw by stalemate!");
 			}
 		} else {
-			message.put("status", "Legal Moves: " + list.size());
+			message.put("status", "Normal");
 		}
+		
+		message.put("moveCount", list.size());
+		message.put("turn", currentPlayer.title);
+		message.put("wMat", white.material);
+		message.put("bMat", black.material);
 
 		String jsonString = message.toString();
 		conn.send(jsonString);

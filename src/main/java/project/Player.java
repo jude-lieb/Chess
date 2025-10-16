@@ -7,10 +7,12 @@ public class Player {
     int promoteType;
     boolean queenside;
     boolean kingside;
+    String title;
     Mod[] ks;
     Mod[] qs;
 
 	public Player(String type) {
+        title = type;
         material = 0;
         ks = new Mod[4];
         qs = new Mod[4];

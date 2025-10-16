@@ -1,7 +1,12 @@
 const deployed = window.location.hostname === "judelieb.com";
 const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost");
 const grid = document.querySelector("#board")
-const display = document.getElementById('messageBox')
+
+const turnDisplay = document.getElementById('turnDisplay')
+const wMat = document.getElementById('whiteMaterial')
+const bMat = document.getElementById('blackMaterial')
+const gameStatus = document.getElementById('gameStatus')
+const moveCount = document.getElementById('legalMoveCount')
 
 let options = []
 let board = []
@@ -13,6 +18,24 @@ const images = [
   "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
   "bp.png","bn.png","bb.png","br.png","bq.png","bk.png",
 ]
+
+function handleJSON(data) {
+  if(data.desc === "boardState") {
+    board = data.squares;
+    //Loading board images
+    for(let i = 0; i < 64; i++) {
+      const img = grid.children[i].querySelector("img");
+      img.src = "/images/" + images[board[i]];
+    }
+
+    options = data.options
+    gameStatus.innerText = data.status
+    turnDisplay.innerText = data.turn
+    wMat.innerText = data.wMat
+    bMat.innerText = data.bMat
+    moveCount.innerText = data.moveCount
+  }
+}
 
 //Generating board
 for(let i = 0; i < 64; i++) {
@@ -72,27 +95,10 @@ function clearOutlines() {
 }
 
 function reset() {
-  display.innerHTML = " "
   mode = true
   options = []
   socket.send(JSON.stringify({ desc: "reset" }))
   clearOutlines()
-}
-
-function handleJSON(data) {
-  if(data.desc === "boardState") {
-    board = data.squares;
-    //Loading board images
-    for(let i = 0; i < 64; i++) {
-      const img = grid.children[i].querySelector("img");
-      img.src = "/images/" + images[board[i]];
-    }
-
-    //console.log(data.options)
-    options = data.options
-
-    display.innerHTML = data.status
-  }
 }
 
 function handleClick(row, col) {
