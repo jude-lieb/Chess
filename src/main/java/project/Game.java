@@ -10,9 +10,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Game {
-	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
+	static int[] SET = {0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
 	int BOARD_SIZE = 8;
@@ -233,6 +236,7 @@ public class Game {
 	}
 
 	public boolean isSquareAttacked(Crd square, int color) {
+		if(square == null) return false;
 		if(!inBounds(square))
 			return false;
 		int type, x, y;
@@ -418,24 +422,14 @@ public class Game {
 			undoMove();
 			undoMove();
 			findLegalMoves(list);
-			sendBoard(conn);
 			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
-		} else if(desc.equals("promote")) {
-			currentPlayer.changePromotion();
-			findLegalMoves(list);
-			getOptions(conn);
-			sendPromote(conn);
+			sendBoard(conn);
 		} else if(desc.equals("reset")) {
 			reset();
 			findLegalMoves(list);
 			printBoard();
-			sendBoard(conn);
-			sendPromote(conn);
 			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
+			sendBoard(conn);
 		}
 	}
 
@@ -447,22 +441,33 @@ public class Game {
 		if(result != null) {
 			//Player move
 			move(result);
-			sendBoard(conn);
 			findLegalMoves(list);
 			updateGameStatus();
-			handleStatus(conn);
+			sendBoard(conn);
 			
 			//Computer move response
 			computerMove();
-			sendBoard(conn);
-			findLegalMoves(list);
 			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
+			findLegalMoves(list);
+			sendBoard(conn);
 		}
 	}
 
-	public void getOptions(WebSocket conn) {
+	public void sendBoard(WebSocket conn) {
+		JSONObject message = new JSONObject();
+		
+		//BoardState
+		JSONArray boardState = new JSONArray();
+		for (int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				boardState.put(board[i][j]);
+			}
+		}
+
+		message.put("desc", "boardState");
+		message.put("squares", boardState);
+
+		//Options
 		int[][] holder = new int[64][28];
 		int[] allowed = new int[64];
 
@@ -492,40 +497,9 @@ public class Game {
 			options.put(moveset);
 		}
 
-		JSONObject message = new JSONObject();
-		message.put("desc", "loadSelect");
 		message.put("options", options);
-		conn.send(message.toString());
-	}
 
-	public void sendPromote(WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "promote");
-		message.put("value", white.promoteType);
-		conn.send(message.toString());
-	}
-
-	public void sendBoard(WebSocket conn) {
-		JSONArray boardState = new JSONArray();
-		for (int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				boardState.put(board[i][j]);
-			}
-		}
-
-		JSONObject message = new JSONObject();
-		message.put("desc", "boardState");
-		message.put("squares", boardState);
-		message.put("value", white.promoteType);
-
-		String jsonString = message.toString();
-		conn.send(jsonString);
-	}
-
-	public void handleStatus(WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "status");
-
+		//Status
 		if(status != 0) {
 			if(status == 1) {
 				message.put("status", "Checkmate!");
@@ -535,7 +509,9 @@ public class Game {
 		} else {
 			message.put("status", "Legal Moves: " + list.size());
 		}
-		conn.send(message.toString());
+
+		String jsonString = message.toString();
+		conn.send(jsonString);
 	}
 
 	public void reset() {
