@@ -38,10 +38,11 @@
 body {
     margin: 0;
     background-color: #f0f0f0;
-    height: 100vh;
+    min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 1rem;
 }
 
 .container {
@@ -49,4 +50,15 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+/* Additional responsive styles */
+@media (max-width: 768px) {
+    body {
+        padding: 0.5rem;
+    }
+    
+    .container {
+        padding: 0;
+    }
 }

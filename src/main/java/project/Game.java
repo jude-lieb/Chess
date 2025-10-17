@@ -520,8 +520,8 @@ public class Game {
 	}
 
 	public void reset() {
-		white = new Player("white");
-		black = new Player("black");
+		white = new Player("White");
+		black = new Player("Black");
 		currentPlayer = white;
 
 		board = new int[BOARD_SIZE][BOARD_SIZE];

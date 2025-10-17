@@ -16,7 +16,7 @@ public class Player {
         material = 0;
         ks = new Mod[4];
         qs = new Mod[4];
-        if(type.equals("white")){
+        if(type.equals("White")){
             promoteType = 5;
             //White Qingside
             ks[0] = new Mod(new Crd(7, 4), 6, 0);
