@@ -1,12 +1,16 @@
 const deployed = window.location.hostname === "judelieb.com";
 const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost");
 const grid = document.querySelector("#board")
-const display = document.getElementById('messageBox')
-const promoteBtn =  document.getElementById("promoteBtn")
+
+const turnDisplay = document.getElementById('turnDisplay')
+const wMat = document.getElementById('whiteMaterial')
+const bMat = document.getElementById('blackMaterial')
+const gameStatus = document.getElementById('gameStatus')
+const moveCount = document.getElementById('legalMoveCount')
 
 let options = []
+let board = []
 let mode = true
-let promoteType = 5
 let x = 0
 let y = 0
 
@@ -15,7 +19,26 @@ const images = [
   "bp.png","bn.png","bb.png","br.png","bq.png","bk.png",
 ]
 
-for (let i = 0; i < 64; i++) {
+function handleJSON(data) {
+  if(data.desc === "boardState") {
+    board = data.squares;
+    //Loading board images
+    for(let i = 0; i < 64; i++) {
+      const img = grid.children[i].querySelector("img");
+      img.src = "/images/" + images[board[i]];
+    }
+
+    options = data.options
+    gameStatus.innerText = data.status
+    turnDisplay.innerText = data.turn
+    wMat.innerText = data.wMat
+    bMat.innerText = data.bMat
+    moveCount.innerText = data.moveCount
+  }
+}
+
+//Generating board
+for(let i = 0; i < 64; i++) {
   const cell = document.createElement("div");
   cell.className = "grid-item";
   cell.row = Math.floor(i / 8);
@@ -71,51 +94,12 @@ function clearOutlines() {
   }
 }
 
-function promote() {
-  if(promoteType < 5) {
-    promoteType++;
-  } else {
-    promoteType = 2;
-  }
-  promoteBtn.innerHTML = `Promote Toggle ${promoteType}`
-  socket.send(JSON.stringify({ desc: "promote" }))
-}
-
 function reset() {
-  display.innerHTML = " "
   mode = true
   options = []
   socket.send(JSON.stringify({ desc: "reset" }))
   clearOutlines()
 }
-
-function handleJSON(data) {
-  if(data.desc === "boardState") {
-    loadBoard(data.squares)
-  }
-
-  if(data.desc === "status") {
-    display.innerHTML = data.status
-  }
-
-  if(data.desc === "promote") {
-    promoteType = data.value
-    promoteBtn.innerHTML = `Promote Toggle ${data.value}`
-  }
-
-  if(data.desc === "loadSelect") {
-    //console.log(data.options)
-    options = data.options
-  }
-}
-
-function loadBoard(set) {
-  for (let i = 0; i < 64; i++) {
-    const img = grid.children[i].querySelector("img");
-    img.src = "/images/" + images[set[i]];
-  }
-}
-
 
 function handleClick(row, col) {
   const clickedIndex = row * 8 + col;

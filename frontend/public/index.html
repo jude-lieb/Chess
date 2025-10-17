@@ -13,16 +13,46 @@
     <div class="container d-flex justify-content-center mt-4">
         <div class="d-flex flex-column flex-md-row align-items-start gap-4">
             
-            <div id="board" class="grid-container">
-
-            </div>
+            <div id="board" class="grid-container"></div>
             
-            <div class="d-flex flex-column gap-3">
-                <p>Web v2.1</p>
-                <button onclick="undo()" class="btn btn-primary w-100">Undo Move</button>
-                <button onclick="reset()" class="btn btn-primary w-100">Reset Game</button>
-                <button onclick="promote()" id="promoteBtn" class="btn btn-primary w-100">Promote Toggle</button>
-                <p id="messageBox"></p>
+            <div class="d-flex flex-column gap-3 p-3 bg-light rounded shadow-sm" style="min-width: 250px;">
+
+                <h5 class="text-center mb-3">Web Chess v2.2</h5>
+
+                <div class="card p-2">
+                    <strong>Turn:</strong>
+                    <span id="turnDisplay" class="float-end text-primary">White</span>
+                </div>
+
+                <div class="card p-2">
+                    <strong>Material Count:</strong>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span>♔ White: <span id="whiteMaterial">0</span></span>
+                        <span>♚ Black: <span id="blackMaterial">0</span></span>
+                    </div>
+                </div>
+
+                <div class="card p-2">
+                    <strong>Status:</strong>
+                    <span id="gameStatus" class="float-end text-secondary">Normal</span>
+                </div>
+
+                 <div class="card p-2">
+                    <strong>Legal Moves:</strong>
+                    <span id="legalMoveCount" class="float-end text-secondary">0</span>
+                </div>
+
+                <div class="card p-2 d-flex align-items-center justify-content-between">
+                    <label for="autoQueenToggle" class="mb-0"><strong>Autoqueen</strong></label>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="autoQueenToggle" checked>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-3 mt-2">
+                    <button onclick="undo()" class="btn btn-outline-primary w-100">↩️ Undo Move</button>
+                    <button onclick="reset()" class="btn btn-danger w-100">🔁 Reset Game</button>
+                </div>
             </div>
         </div>
     </div>

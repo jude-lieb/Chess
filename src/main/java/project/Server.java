@@ -27,11 +27,8 @@ public class Server extends WebSocketServer {
 		games.put(conn, newGame);
        
         newGame.reset();
-        newGame.sendBoard(conn);
         newGame.updateGameStatus();
-        newGame.handleStatus(conn);
-        newGame.getOptions(conn);
-		newGame.sendPromote(conn);
+        newGame.sendBoard(conn);
     }
 
     @Override

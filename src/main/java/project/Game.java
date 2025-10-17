@@ -10,29 +10,27 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Game {
-	int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-	// int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	//  	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,0,0,0,6,0,0,4};
+	static int[] SET = {0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
-    int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
+	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
-	Crd[][] PIECE_MOVES = new Crd[13][];
-
 	int BOARD_SIZE = 8;
 	int START_COLOR = 6;
+	int[][] board;
+	int color;
+	int status;
 	
+	Crd[][] PIECE_MOVES;
 	MoveStack stack;
 	ArrayList<Move> list;
 	Eval eval;
 	Player currentPlayer;
 	Player white;
 	Player black;
-
-	int[][] board;
-	int color;
-	int status;
 
 	public Move isMoveLegal(Crd init, Crd dest) {
 		for(int i = 0; i < list.size(); i++) {
@@ -45,7 +43,7 @@ public class Game {
 
 	public void updateGameStatus() {
 		if(list.isEmpty()) {
-			status = isSquareAttacked(currentPlayer.king, color) ? 1 : 2;
+			status = inCheck() ? 1 : 2;
 		} else {
 			status = 0;
 		}
@@ -59,7 +57,10 @@ public class Game {
 		return (dest.y < 8 && dest.y > -1) && (dest.x < 8 && dest.x > -1);
 	}
 
-	//Incomplete
+	public boolean inCheck() {
+		return isSquareAttacked(currentPlayer.king, color);
+	}
+
 	public void computerMove() {
 		eval.pickBestMove();
 		if(!list.isEmpty()) {
@@ -67,7 +68,6 @@ public class Game {
 		}
 	}
 
-	//Incomplete
 	public void move(Move mv) {
 		mv.enter();
 		stack.push(mv);
@@ -77,18 +77,13 @@ public class Game {
 	public void changeTurn() {
 		if(color < 7) {
 			currentPlayer = black;
-			black.isTurn = true;
-			white.isTurn = false;
 			color = 12;
 		} else {
 			currentPlayer = white;
-			white.isTurn = true;
-			black.isTurn = false;
 			color = 6;
 		}
 	}
 
-	//Incomplete
 	public void undoMove() {
 		Move mv = stack.pop();
 		if(mv == null) 
@@ -97,12 +92,9 @@ public class Game {
 		changeTurn();
 	}
 
-	//Incomplete
 	public void canEnPassant() {
 		Move temp = stack.peek();
-		
-		if(temp == null) 
-			return;
+		if(temp == null) return;
 
 		int passant = temp.passant;
 		if(passant != -1) {
@@ -139,31 +131,30 @@ public class Game {
 			}
 
 			if(direction != 0) {
-				Mod start = new Mod(new Crd(col1, passant + direction), typ, 0);
-				Mod end = new Mod(new Crd(col2, passant), 0, typ);
-				Mod pass = new Mod(new Crd(col1, passant), rep, 0);
-				Move insert = new Move(this, start, end, pass, null);
+				Mod[] params = new Mod[4];
+				params[0] = new Mod(new Crd(col1, passant + direction), typ, 0);
+				params[1] = new Mod(new Crd(col2, passant), 0, typ);
+				params[2] = new Mod(new Crd(col1, passant), rep, 0);
+
+				Move insert = new Move(this, params);
 				list.add(insert);
 				if(count > 1) {
-					Mod start1 = new Mod(new Crd(col1, passant - direction), typ, 0);
-					list.add(new Move(this, start1, end, pass, null));
+					params[0] = new Mod(new Crd(col1, passant - direction), typ, 0);
+					list.add(new Move(this, params));
 				}
 			}
 		}
 	}
 
-	//Incomplete
 	public void canCastle() {
+		if(inCheck()) return;
+
 		if(color < 7) {
 			if(white.kingside) {
 				if(board[7][5] == 0 && board[7][6] == 0) {
 					if(!isSquareAttacked(new Crd(7, 5), color) &&
 						!isSquareAttacked(new Crd(7, 6), color)) {
-						Mod start = new Mod(new Crd(7, 4), 6, 0);
-						Mod end = new Mod(new Crd(7, 6), 0, 6);
-						Mod s1 = new Mod(new Crd(7, 7), 4, 0);
-						Mod s2 = new Mod(new Crd(7, 5), 0, 4);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, white.ks);
 						list.add(mv);
 					}
 				}
@@ -173,11 +164,7 @@ public class Game {
 					if(!isSquareAttacked(new Crd(7, 3), color) &&
 						!isSquareAttacked(new Crd(7, 2), color) &&
 							!isSquareAttacked(new Crd(7,1), color)) {
-						Mod start = new Mod(new Crd(7, 4), 6, 0);
-						Mod end = new Mod(new Crd(7, 2), 0, 6);
-						Mod s1 = new Mod(new Crd(7, 0), 4, 0);
-						Mod s2 = new Mod(new Crd(7, 3), 0, 4);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, white.qs);
 						list.add(mv);
 					}
 				}
@@ -187,11 +174,7 @@ public class Game {
 				if(board[0][5] == 0 && board[0][6] == 0) {
 					if(!isSquareAttacked(new Crd(0, 5), color) &&
 						!isSquareAttacked(new Crd(0, 6), color)) {
-						Mod start = new Mod(new Crd(0, 4), 12, 0);
-						Mod end = new Mod(new Crd(0, 6), 0, 12);
-						Mod s1 = new Mod(new Crd(0, 7), 10, 0);
-						Mod s2 = new Mod(new Crd(0, 5), 0, 10);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, black.ks);
 						list.add(mv);
 					}
 				}
@@ -201,147 +184,12 @@ public class Game {
 					if(!isSquareAttacked(new Crd(0, 3), color) &&
 						!isSquareAttacked(new Crd(0, 2), color) &&
 							!isSquareAttacked(new Crd(0,1), color)) {
-						Mod start = new Mod(new Crd(0, 10), 12, 0);
-						Mod end = new Mod(new Crd(0, 2), 0, 12);
-						Mod s1 = new Mod(new Crd(0, 0), 10, 0);
-						Mod s2 = new Mod(new Crd(0, 3), 0, 10);
-						Move mv = new Move(this, start, end, s1, s2);
+						Move mv = new Move(this, black.qs);
 						list.add(mv);
 					}
 				}
 			}
 		}
-	}
-
-	public void castleEnterMove() {
-
-	}
-
-	public void handleCommand(String desc, WebSocket conn) {
-		if(desc.equals("undo")) {
-			undoMove();
-			undoMove();
-			findLegalMoves(list);
-			sendBoard(conn);
-			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
-		} else if(desc.equals("promote")) {
-			currentPlayer.changePromotion();
-			findLegalMoves(list);
-			getOptions(conn);
-			sendPromote(conn);
-		} else if(desc.equals("reset")) {
-			reset();
-			findLegalMoves(list);
-			printBoard();
-			sendBoard(conn);
-			sendPromote(conn);
-			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
-		}
-	}
-
-	public void handleCrdInput(JSONArray move, WebSocket conn) {		
-		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
-		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
-
-		Move result = isMoveLegal(temp1, temp2);
-		if(result != null) {
-			//Player move
-			move(result);
-			sendBoard(conn);
-			findLegalMoves(list);
-			//System.out.println("Material " + white.material + " " + black.material);
-			updateGameStatus();
-			handleStatus(conn);
-			
-			//Computer move response
-			computerMove();
-			sendBoard(conn);
-			findLegalMoves(list);
-			updateGameStatus();
-			handleStatus(conn);
-			getOptions(conn);
-			//System.out.println("Material " + white.material + " " + black.material);
-		}
-	}
-
-	public void getOptions(WebSocket conn) {
-		int[][] holder = new int[64][28];
-		int[] allowed = new int[64];
-
-		for (int i = 0; i < list.size(); i++) {
-			Crd current = list.get(i).getInit();
-			int start = (8 * current.y) + current.x;
-
-			holder[start][0] = start;
-			allowed[start] = 0;
-
-			for (int j = 0; j < list.size(); j++) {
-				if (list.get(j).getInit().equals(current)) {
-					holder[start][allowed[start]] = (8 * list.get(j).getDest().y) 
-						+ list.get(j).getDest().x;
-					allowed[start]++;
-				}
-			}
-		}
-
-		JSONArray options = new JSONArray();
-		for (int i = 0; i < 64; i++) {
-			JSONArray moveset = new JSONArray();
-
-			for (int j = 0; j < allowed[i]; j++) {
-				moveset.put(holder[i][j]);
-			}
-			options.put(moveset);
-		}
-
-		JSONObject message = new JSONObject();
-		message.put("desc", "loadSelect");
-		message.put("options", options);
-		conn.send(message.toString());
-	}
-
-	public void sendPromote(WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "promote");
-		message.put("value", white.promoteType);
-		conn.send(message.toString());
-	}
-
-	public void sendBoard(WebSocket conn) {
-		JSONArray boardState = new JSONArray();
-		for (int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				boardState.put(board[i][j]);
-			}
-		}
-
-		JSONObject message = new JSONObject();
-		message.put("desc", "boardState");
-		message.put("squares", boardState);
-		message.put("value", white.promoteType);
-
-		String jsonString = message.toString();
-		conn.send(jsonString);
-	}
-
-	public void handleStatus(WebSocket conn) {
-		JSONObject message = new JSONObject();
-		message.put("desc", "status");
-
-		if(status != 0) {
-			if(status == 1) {
-				message.put("status", "Checkmate!");
-			} else {
-				message.put("status", "Draw by stalemate!");
-			}
-		} else {
-			message.put("status", "Legal Moves: " + list.size());
-		}
-		conn.send(message.toString());
 	}
 
 	public void findLegalMoves(ArrayList list) {
@@ -354,14 +202,14 @@ public class Game {
 			for(int j = 0; j < 8; j++) {
 				if(!diffColor(board[i][j], color)) {
 					Crd[] mvs = PIECE_MOVES[board[i][j]];
-					//System.out.println(board[i][j]);
 					for(int q = 0; q < mvs.length; q++) {
 						Crd init = new Crd(i, j);
 						Crd mv = new Crd(i+mvs[q].y, j+mvs[q].x);
 						//System.out.println(mv.y + " " + mv.x);
 						if(inBounds(mv) && diffColor(color, board[mv.y][mv.x]) && systemChecks(init, mv)) {
 							int piece = board[init.y][init.x];
-							Mod start = new Mod(init, piece, 0);
+							Mod[] params = new Mod[4];
+							params[0] = new Mod(init, piece, 0);
 
 							//Checking for promotion and adjusting end location piece
 							if((piece == 1 || piece == 7) && (mv.y == 0 || mv.y == 7)) {
@@ -372,16 +220,14 @@ public class Game {
 								}
 							}
 
-							Mod end = new Mod(mv, board[mv.y][mv.x], piece);
-						
-							Move stat = new Move(this, start, end, null, null);
+							params[1] = new Mod(mv, board[mv.y][mv.x], piece);
+							Move stat = new Move(this, params);
+
 							stat.enter();
 							boolean result = !isSquareAttacked(currentPlayer.king, ctemp);
 							stat.undo();
 							
-							if(result) {
-								list.add(stat);
-							}
+							if(result) list.add(stat);
 						}
 					}
 				}
@@ -390,6 +236,7 @@ public class Game {
 	}
 
 	public boolean isSquareAttacked(Crd square, int color) {
+		if(square == null) return false;
 		if(!inBounds(square))
 			return false;
 		int type, x, y;
@@ -570,12 +417,112 @@ public class Game {
 		return true;
 	}
 
+	public void handleCommand(String desc, WebSocket conn) {
+		if(desc.equals("undo")) {
+			undoMove();
+			undoMove();
+			findLegalMoves(list);
+			updateGameStatus();
+			sendBoard(conn);
+		} else if(desc.equals("reset")) {
+			reset();
+			findLegalMoves(list);
+			printBoard();
+			updateGameStatus();
+			sendBoard(conn);
+		}
+	}
+
+	public void handleCrdInput(JSONArray move, WebSocket conn) {		
+		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
+		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
+		Move result = isMoveLegal(temp1, temp2);
+
+		if(result != null) {
+			//Player move
+			move(result);
+			findLegalMoves(list);
+			updateGameStatus();
+			sendBoard(conn);
+			
+			//Computer move response
+			computerMove();
+			updateGameStatus();
+			findLegalMoves(list);
+			sendBoard(conn);
+		}
+	}
+
+	public void sendBoard(WebSocket conn) {
+		JSONObject message = new JSONObject();
+		
+		//BoardState
+		JSONArray boardState = new JSONArray();
+		for (int i = 0; i < 8; i++) {
+			for(int j = 0; j < 8; j++) {
+				boardState.put(board[i][j]);
+			}
+		}
+
+		message.put("desc", "boardState");
+		message.put("squares", boardState);
+
+		//Options
+		int[][] holder = new int[64][28];
+		int[] allowed = new int[64];
+
+		for (int i = 0; i < list.size(); i++) {
+			Crd current = list.get(i).getInit();
+			int start = (8 * current.y) + current.x;
+
+			holder[start][0] = start;
+			allowed[start] = 0;
+
+			for (int j = 0; j < list.size(); j++) {
+				if (list.get(j).getInit().equals(current)) {
+					holder[start][allowed[start]] = (8 * list.get(j).getDest().y) 
+						+ list.get(j).getDest().x;
+					allowed[start]++;
+				}
+			}
+		}
+
+		JSONArray options = new JSONArray();
+		for (int i = 0; i < 64; i++) {
+			JSONArray moveset = new JSONArray();
+
+			for (int j = 0; j < allowed[i]; j++) {
+				moveset.put(holder[i][j]);
+			}
+			options.put(moveset);
+		}
+
+		message.put("options", options);
+
+		//Status
+		if(status != 0) {
+			if(status == 1) {
+				message.put("status", "Checkmate!");
+			} else {
+				message.put("status", "Draw by stalemate!");
+			}
+		} else {
+			message.put("status", "Normal");
+		}
+		
+		message.put("moveCount", list.size());
+		message.put("turn", currentPlayer.title);
+		message.put("wMat", white.material);
+		message.put("bMat", black.material);
+
+		String jsonString = message.toString();
+		conn.send(jsonString);
+	}
+
 	public void reset() {
 		white = new Player("white");
 		black = new Player("black");
 		currentPlayer = white;
-		white.isTurn = true;
-		black.isTurn = false;
 
 		board = new int[BOARD_SIZE][BOARD_SIZE];
 		int piece;
@@ -593,10 +540,10 @@ public class Game {
 						black.king = new Crd(i, j);
 					}
 				} else { //For other pieces, add material value to total
-					if(SET[count] < 7) {
-						white.material += PIECE_VALUES[SET[count]];
+					if(piece < 7) {
+						white.material += PIECE_VALUES[piece];
 					} else {
-						black.material += PIECE_VALUES[SET[count]];
+						black.material += PIECE_VALUES[piece];
 					}
 				}
 				count++;
@@ -627,10 +574,10 @@ public class Game {
 		list.ensureCapacity(50);
 		eval = new Eval(this);
 		findLegalMoves(list);
-		//System.out.println("Material " + white.material + " " + black.material);
     }
 
 	public Game() {
+		PIECE_MOVES = new Crd[13][];
 		try {
 			Scanner scan = new Scanner(new File("vectors.txt"));
 			int read_Y, read_X;
