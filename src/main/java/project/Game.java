@@ -10,11 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Game {
-	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
-    
-	// static int[] SET = {0,0,0,0,0,0,0,0,7,7,7,7,7,7,7,7,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+    
+	static int[] SET = {10,0,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
@@ -32,9 +32,9 @@ public class Game {
 	Player white;
 	Player black;
 
-	public Move isMoveLegal(Crd init, Crd dest) {
+	public Move isMoveLegal(Crd init, Crd dest, int promote) {
 		for(int i = 0; i < list.size(); i++) {
-			if(list.get(i).isEqual(init, dest)) {
+			if(list.get(i).isEqual(init, dest, promote)) {
 				return list.get(i);
 			}
 		}
@@ -43,7 +43,7 @@ public class Game {
 
 	public void updateGameStatus() {
 		if(list.isEmpty()) {
-			status = inCheck() ? 1 : 2;
+			if(inCheck()) status = 1; else status = 2;
 		} else {
 			status = 0;
 		}
@@ -64,7 +64,9 @@ public class Game {
 	public void computerMove() {
 		eval.pickBestMove();
 		if(!list.isEmpty()) {
-			move(list.get(0));
+			Move mv = list.get(0);
+			mv.print();
+			move(mv);
 		}
 	}
 
@@ -136,11 +138,11 @@ public class Game {
 				params[1] = new Mod(new Crd(col2, passant), 0, typ);
 				params[2] = new Mod(new Crd(col1, passant), rep, 0);
 
-				Move insert = new Move(this, params);
+				Move insert = new Move(this, params, 0);
 				list.add(insert);
 				if(count > 1) {
 					params[0] = new Mod(new Crd(col1, passant - direction), typ, 0);
-					list.add(new Move(this, params));
+					list.add(new Move(this, params, 0));
 				}
 			}
 		}
@@ -154,7 +156,7 @@ public class Game {
 				if(board[7][5] == 0 && board[7][6] == 0) {
 					if(!isSquareAttacked(new Crd(7, 5), color) &&
 						!isSquareAttacked(new Crd(7, 6), color)) {
-						Move mv = new Move(this, white.ks);
+						Move mv = new Move(this, white.ks, 0);
 						list.add(mv);
 					}
 				}
@@ -164,7 +166,7 @@ public class Game {
 					if(!isSquareAttacked(new Crd(7, 3), color) &&
 						!isSquareAttacked(new Crd(7, 2), color) &&
 							!isSquareAttacked(new Crd(7,1), color)) {
-						Move mv = new Move(this, white.qs);
+						Move mv = new Move(this, white.qs, 0);
 						list.add(mv);
 					}
 				}
@@ -174,7 +176,7 @@ public class Game {
 				if(board[0][5] == 0 && board[0][6] == 0) {
 					if(!isSquareAttacked(new Crd(0, 5), color) &&
 						!isSquareAttacked(new Crd(0, 6), color)) {
-						Move mv = new Move(this, black.ks);
+						Move mv = new Move(this, black.ks, 0);
 						list.add(mv);
 					}
 				}
@@ -184,7 +186,7 @@ public class Game {
 					if(!isSquareAttacked(new Crd(0, 3), color) &&
 						!isSquareAttacked(new Crd(0, 2), color) &&
 							!isSquareAttacked(new Crd(0,1), color)) {
-						Move mv = new Move(this, black.qs);
+						Move mv = new Move(this, black.qs, 0);
 						list.add(mv);
 					}
 				}
@@ -211,23 +213,30 @@ public class Game {
 							Mod[] params = new Mod[4];
 							params[0] = new Mod(init, piece, 0);
 
-							//Checking for promotion and adjusting end location piece
-							if((piece == 1 || piece == 7) && (mv.y == 0 || mv.y == 7)) {
-								if(color < 7) {
-									piece = white.promoteType;
-								} else {
-									piece = black.promoteType;
-								}
-							}
+							
 
 							params[1] = new Mod(mv, board[mv.y][mv.x], piece);
-							Move stat = new Move(this, params);
+							Move stat = new Move(this, params, 0);
 
 							stat.enter();
 							boolean result = !isSquareAttacked(currentPlayer.king, ctemp);
 							stat.undo();
-							
-							if(result) list.add(stat);
+
+							//Adding promotion 4 move options
+							if(result && (piece == 1 || piece == 7) && (mv.y == 0 || mv.y == 7)) {
+								int isBlack;
+								if(color < 7) {
+									isBlack = 0;
+								} else {
+									isBlack = 6;
+								}
+								for(int k = 2; k < 6; k++) {
+									params[1] = new Mod(mv, board[mv.y][mv.x], k + isBlack);
+									list.add(new Move(this, params, k + isBlack));
+								}
+							} else { //Normal move entering
+								if(result) list.add(stat);
+							}
 						}
 					}
 				}
@@ -419,7 +428,8 @@ public class Game {
 
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
-			undoMove();
+			//One ply undo if game ends on player's turn
+			if(color < 7) undoMove();
 			undoMove();
 			findLegalMoves(list);
 			updateGameStatus();
@@ -436,10 +446,15 @@ public class Game {
 	public void handleCrdInput(JSONArray move, WebSocket conn) {		
 		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
 		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
-		Move result = isMoveLegal(temp1, temp2);
+
+		System.out.printf("Coords %d %d %d %d", temp1.y, temp1.x,temp2.y, temp2.x);
+
+		//Checking with getint 4 as promote type
+		Move result = isMoveLegal(temp1, temp2, move.getInt(4));
 
 		if(result != null) {
 			//Player move
+			result.print();
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();
@@ -447,11 +462,13 @@ public class Game {
 			
 			//Computer move response
 			computerMove();
-			updateGameStatus();
 			findLegalMoves(list);
+			updateGameStatus();
+			sendBoard(conn);
+		} else {
 			sendBoard(conn);
 		}
-	}
+	} 
 
 	public void sendBoard(WebSocket conn) {
 		JSONObject message = new JSONObject();

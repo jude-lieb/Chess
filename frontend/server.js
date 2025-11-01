@@ -44,7 +44,7 @@ wss.on("connection", (clientSocket) => {
 
   backendSocket.on("message", (message) => {
     const msgStr = message.toString();
-    console.log("message: ", msgStr)
+    if(!deployed) console.log("message: ", msgStr)
     if (clientSocket.readyState === WebSocket.OPEN) {
       clientSocket.send(msgStr);
     }
