@@ -12,8 +12,8 @@ const autoQueen = document.getElementById('autoQueenSwitch')
 let options = []
 let board = []
 let mode = true
-let x = 0
-let y = 0
+// let x = 0
+// let y = 0
 
 const images = [
   "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
@@ -154,33 +154,52 @@ function handleClick(row, col) {
         socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, promote]}))
         return
       }
+      
       const modalEl = document.getElementById('promotionModal');
       const modal = new bootstrap.Modal(modalEl);
-      choiceMade = false
-      modal.show();
+      
+      // Store the destination coordinates in variables that won't change
+      const destRow = row;
+      const destCol = col;
+      const destIndex = clickedIndex;
+      
+      let choiceMade = false;
 
+      // Clear any existing event listeners
       const buttons = Array.from(modalEl.querySelectorAll('.promo-btn'));
-      buttons.forEach(b => b.disabled = false);
+      buttons.forEach(btn => {
+        // Remove any existing click listeners
+        btn.replaceWith(btn.cloneNode(true));
+      });
 
-      // Add modal hidden event listener
+      // Get fresh references after cloning
+      const freshButtons = Array.from(modalEl.querySelectorAll('.promo-btn'));
+      freshButtons.forEach(b => b.disabled = false);
+
       const handleModalClose = () => {
         if (!choiceMade) {
           console.log("Modal closed without selection, using default");
-          mode = true
-          socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, 0]}))
+          mode = true;
+          // Use the stored destination coordinates
+          socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, 0]}))
         }
         modalEl.removeEventListener('hidden.bs.modal', handleModalClose);
+        // Clean up button event listeners
+        freshButtons.forEach(btn => {
+          btn.onclick = null;
+        });
       };
 
       modalEl.addEventListener('hidden.bs.modal', handleModalClose);
 
-      buttons.forEach(btn => {
-        const onClick = (e) => {
-          choiceMade = true
-          buttons.forEach(b => b.disabled = true);
+      freshButtons.forEach(btn => {
+        btn.onclick = (e) => {
+          choiceMade = true;
+          freshButtons.forEach(b => b.disabled = true);
 
           const piece = btn.dataset.piece;
-          // map piece -> promote code
+          let promote = 0;
+          
           if(isWhitePawn) {
             if (piece === 'q') promote = 5;
             else if (piece === 'r') promote = 4;
@@ -196,15 +215,16 @@ function handleClick(row, col) {
           modalEl.removeEventListener('hidden.bs.modal', handleModalClose);
           modal.hide();
 
-          mode = true
-          socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, promote]}))
+          mode = true;
+          // Use the stored destination coordinates
+          socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, promote]}))
         };
-
-        btn.addEventListener('click', onClick);
-      })
-      return
+      });
+      
+      modal.show();
+      return;
     } else {
-      mode = true
+      mode = true;
       socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, promote]}))
     } 
   }
