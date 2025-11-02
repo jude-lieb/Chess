@@ -2,17 +2,16 @@ const deployed = window.location.hostname === "judelieb.com";
 const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost");
 const grid = document.querySelector("#board")
 
-const turnDisplay = document.getElementById('turnDisplay')
+//const turnDisplay = document.getElementById('turnDisplay')
 const wMat = document.getElementById('whiteMaterial')
 const bMat = document.getElementById('blackMaterial')
 const gameStatus = document.getElementById('gameStatus')
 const moveCount = document.getElementById('legalMoveCount')
+const autoQueen = document.getElementById('autoQueenSwitch')
 
 let options = []
 let board = []
 let mode = true
-let x = 0
-let y = 0
 
 const images = [
   "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
@@ -30,7 +29,7 @@ function handleJSON(data) {
 
     options = data.options
     gameStatus.innerText = data.status
-    turnDisplay.innerText = data.turn
+    //turnDisplay.innerText = data.turn
     wMat.innerText = data.wMat
     bMat.innerText = data.bMat
     moveCount.innerText = data.moveCount
@@ -117,26 +116,105 @@ function handleClick(row, col) {
     }
     mode = false;
   } else {
-    const crd = y * 8 + x;
+    const crd = y * 8 + x
+    approved = false
+
     grid.children[crd].classList.remove("green-outline");
-
-    if (options[crd] !== undefined && options[crd] !== null) {
+    if(options[crd]) {
       for (let i = 0; i < options[crd].length; i++) {
-        const targetIndex = options[crd][i];
-        const targetDiv = grid.children[targetIndex];
-        const fromImg = grid.children[crd].querySelector("img");
-        const toImg = targetDiv.querySelector("img");
-
-        if (targetIndex === clickedIndex) {
-          toImg.src = fromImg.src;
-          fromImg.src = "/images/blank.jpg";
-        }
-        targetDiv.classList.remove("red-outline");
+        grid.children[options[crd][i]].classList.remove("red-outline");
+        if(clickedIndex === options[crd][i]) approved = true
       }
     }
 
-    mode = true;
-    socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col],}));
+    if(!approved) {
+      mode = true
+      return
+    }
+
+    let promote = 0;
+    const fromImg = grid.children[crd].querySelector("img");
+    const toImg = grid.children[clickedIndex].querySelector("img");
+    const fromSrc = fromImg.src;
+
+    // Decide if this is a promotion move
+    const isWhitePawn = board[crd] === 1;
+    const isBlackPawn = board[crd] === 7;
+    const isPromotion = (isWhitePawn && clickedIndex < 8) || (isBlackPawn && clickedIndex > 55);
+
+    toImg.src = fromSrc;
+    fromImg.src = "/images/blank.jpg";
+
+    if(isPromotion) {
+      if(autoQueen.checked) {
+        promote = isWhitePawn ? 5 : (isBlackPawn ? 11 : 0);
+        mode = true
+        socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, promote]}))
+        return
+      }
+      
+      const modalEl = document.getElementById('promotionModal');
+      const modal = new bootstrap.Modal(modalEl);
+      
+      const destRow = row;
+      const destCol = col;
+      let choiceMade = false;
+
+      const buttons = Array.from(modalEl.querySelectorAll('.promo-btn'));
+      buttons.forEach(btn => {
+        btn.replaceWith(btn.cloneNode(true));
+      });
+
+      const freshButtons = Array.from(modalEl.querySelectorAll('.promo-btn'));
+      freshButtons.forEach(b => b.disabled = false);
+
+      const handleModalClose = () => {
+        if (!choiceMade) {
+          mode = true;
+          socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, 0]}))
+        }
+        modalEl.removeEventListener('hidden.bs.modal', handleModalClose);
+    
+        freshButtons.forEach(btn => {
+          btn.onclick = null;
+        });
+      };
+
+      modalEl.addEventListener('hidden.bs.modal', handleModalClose);
+
+      freshButtons.forEach(btn => {
+        btn.onclick = (e) => {
+          choiceMade = true;
+          freshButtons.forEach(b => b.disabled = true);
+
+          const piece = btn.dataset.piece;
+          let promote = 0;
+          
+          if(isWhitePawn) {
+            if (piece === 'q') promote = 5;
+            else if (piece === 'r') promote = 4;
+            else if (piece === 'b') promote = 3;
+            else if (piece === 'n') promote = 2;
+          } else if (isBlackPawn) {
+            if (piece === 'q') promote = 11;
+            else if (piece === 'r') promote = 10;
+            else if (piece === 'b') promote = 9;
+            else if (piece === 'n') promote = 8;
+          }
+
+          modalEl.removeEventListener('hidden.bs.modal', handleModalClose);
+          modal.hide();
+
+          mode = true;
+          socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, promote]}))
+        };
+      });
+      
+      modal.show();
+      return;
+    } else {
+      mode = true;
+      socket.send(JSON.stringify({desc: "move request", crd: [y, x, row, col, promote]}))
+    } 
   }
 }
-

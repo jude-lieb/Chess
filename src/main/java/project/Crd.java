@@ -16,6 +16,6 @@ public class Crd {
 	}
 
 	public void print() {
-		System.out.printf("Crd: y = %d, x = %d\n", y, x);
+		System.out.printf("y = %d, x = %d\n", y, x);
 	}
 }

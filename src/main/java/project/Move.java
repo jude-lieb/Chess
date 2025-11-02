@@ -6,7 +6,7 @@ public class Move {
 	Game game;
 	int bMatChange, wMatChange;
 	boolean wK, wQ, bK, bQ;
-	int passant;
+	int passant, promote;
 	static Crd wKing = new Crd(7, 4);
 	static Crd bKing = new Crd(0, 4);
 	static Crd wQRook = new Crd(7,0);
@@ -14,8 +14,9 @@ public class Move {
 	static Crd bQRook = new Crd(0,0);
 	static Crd bKRook = new Crd(0,7);
 
-	public Move(Game game, Mod[] params) {
+	public Move(Game game, Mod[] params, int promote) {
 		this.game = game;
+		this.promote = promote;
 		this.start = params[0];
 		this.end = params[1];
 		this.s1 = params[2];
@@ -141,8 +142,9 @@ public class Move {
 		end.square.print();
     }
 
-	public boolean isEqual(Crd init, Crd dest) {
-		return init.equals(start.square) && dest.equals(end.square);
+	//Checks start and end coords, then promote type
+	public boolean isEqual(Crd init, Crd dest, int pro) {
+		return init.equals(start.square) && dest.equals(end.square) && pro == promote;
 	}
 
 	public Crd getInit() {
