@@ -10,11 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class Game {
-	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-	static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
@@ -65,7 +65,6 @@ public class Game {
 		eval.pickBestMove();
 		if(!list.isEmpty()) {
 			Move mv = list.get(0);
-			mv.print();
 			move(mv);
 		}
 	}
@@ -207,7 +206,7 @@ public class Game {
 					for(int q = 0; q < mvs.length; q++) {
 						Crd init = new Crd(i, j);
 						Crd mv = new Crd(i+mvs[q].y, j+mvs[q].x);
-						//System.out.println(mv.y + " " + mv.x);
+						
 						if(inBounds(mv) && diffColor(color, board[mv.y][mv.x]) && systemChecks(init, mv)) {
 							int piece = board[init.y][init.x];
 							Mod[] params = new Mod[4];
@@ -437,7 +436,6 @@ public class Game {
 		} else if(desc.equals("reset")) {
 			reset();
 			findLegalMoves(list);
-			printBoard();
 			updateGameStatus();
 			sendBoard(conn);
 		}
@@ -447,14 +445,11 @@ public class Game {
 		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
 		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
 
-		System.out.printf("Coords %d %d %d %d", temp1.y, temp1.x,temp2.y, temp2.x);
-
 		//Checking with getint 4 as promote type
 		Move result = isMoveLegal(temp1, temp2, move.getInt(4));
 
 		if(result != null) {
 			//Player move
-			result.print();
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();

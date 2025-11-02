@@ -2,7 +2,7 @@ const deployed = window.location.hostname === "judelieb.com";
 const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost");
 const grid = document.querySelector("#board")
 
-const turnDisplay = document.getElementById('turnDisplay')
+//const turnDisplay = document.getElementById('turnDisplay')
 const wMat = document.getElementById('whiteMaterial')
 const bMat = document.getElementById('blackMaterial')
 const gameStatus = document.getElementById('gameStatus')
@@ -12,8 +12,6 @@ const autoQueen = document.getElementById('autoQueenSwitch')
 let options = []
 let board = []
 let mode = true
-// let x = 0
-// let y = 0
 
 const images = [
   "blank.jpg","wp.png","wn.png","wb.png","wr.png","wq.png","wk.png",
@@ -31,7 +29,7 @@ function handleJSON(data) {
 
     options = data.options
     gameStatus.innerText = data.status
-    turnDisplay.innerText = data.turn
+    //turnDisplay.innerText = data.turn
     wMat.innerText = data.wMat
     bMat.innerText = data.bMat
     moveCount.innerText = data.moveCount
@@ -158,33 +156,25 @@ function handleClick(row, col) {
       const modalEl = document.getElementById('promotionModal');
       const modal = new bootstrap.Modal(modalEl);
       
-      // Store the destination coordinates in variables that won't change
       const destRow = row;
       const destCol = col;
-      const destIndex = clickedIndex;
-      
       let choiceMade = false;
 
-      // Clear any existing event listeners
       const buttons = Array.from(modalEl.querySelectorAll('.promo-btn'));
       buttons.forEach(btn => {
-        // Remove any existing click listeners
         btn.replaceWith(btn.cloneNode(true));
       });
 
-      // Get fresh references after cloning
       const freshButtons = Array.from(modalEl.querySelectorAll('.promo-btn'));
       freshButtons.forEach(b => b.disabled = false);
 
       const handleModalClose = () => {
         if (!choiceMade) {
-          console.log("Modal closed without selection, using default");
           mode = true;
-          // Use the stored destination coordinates
           socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, 0]}))
         }
         modalEl.removeEventListener('hidden.bs.modal', handleModalClose);
-        // Clean up button event listeners
+    
         freshButtons.forEach(btn => {
           btn.onclick = null;
         });
@@ -216,7 +206,6 @@ function handleClick(row, col) {
           modal.hide();
 
           mode = true;
-          // Use the stored destination coordinates
           socket.send(JSON.stringify({desc: "move request", crd: [y, x, destRow, destCol, promote]}))
         };
       });
