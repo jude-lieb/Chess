@@ -67,6 +67,7 @@ public class Server extends WebSocketServer {
 
     public static void main(String[] args) {
         Server server = new Server(3000);
+        server.setReuseAddr(true);
         server.start();
         System.out.println("Server running on localhost:3000");
     }
