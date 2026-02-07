@@ -9,6 +9,8 @@ import java.util.Random;
  */
 public class Eval {
 	int totalCount = 0;
+	boolean color;
+	boolean currentColor;
     Game g;
 
     public Eval(Game g) {
@@ -16,11 +18,11 @@ public class Eval {
     }
 
 	//Tree search alpha-beta pruning algorithm (roughly based on wikihow code example)
-	public int getScore(int depth, int alpha, int beta){
+	public int getScore(int depth, int alpha, int beta, boolean currentColor) {
 		//Terminating condition (currently depth 1)
 		if (depth == 2) {
 			totalCount++;
-			return g.materialDiff();
+			return g.materialDiff(currentColor);
 		}
 
 		//Setting up move array and count
@@ -28,58 +30,45 @@ public class Eval {
 		g.findLegalMoves(options);
 		int moveCount = options.size();
 		
-		//maximizing black score
-		if (g.color > 6){
-			int best = -100;
+		int best;
+		if(currentColor == color) {
+			best = -100;
+		} else {
+			best = 100;
+		}
 			
-			//Recursively searching each move in array
-			for (int i = 0; i < moveCount; i++){
-				//Moving to new position for analysis
-                Move stat = options.get(i);
-				g.move(stat);
-				
-				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, alpha, beta);
-				g.undoMove();
-				
+		//Recursively searching each move in array
+		for (int i = 0; i < moveCount; i++){
+			//Moving to new position for analysis
+			Move stat = options.get(i);
+			g.move(stat);
+			
+			//Recursive call to next position (then undo move)
+			int val = getScore(depth + 1, alpha, beta, !currentColor);
+			g.undoMove();
+			
+			if(currentColor == color) {
 				//Compare with previous scores
 				best = Math.max(best, val);
 				alpha = Math.max(alpha, best);
-				
-				//Trimming branches to reduce total calculation
-				if (beta <= alpha) {
-					break;
-				}
-			}
-			return best;
-		} else {
-			int best = 100;
-			
-			//Recursively searching each move in array
-			for (int i = 0; i < moveCount; i++){
-				Move stat = options.get(i);
-				g.move(stat);
-				
-				//Recursive call to next position (then undo move)
-				int val = getScore(depth + 1, alpha, beta);
-				g.undoMove();
-				
-				//Compare with previous scores
+			} else {
 				best = Math.min(best, val);
 				beta = Math.min(beta, best);
-				
-				//Trimming branches to reduce total calculation
-				if (beta <= alpha) {
-					break;
-				}
 			}
-			return best;
+			//Trimming branches to reduce total calculation
+			if (beta <= alpha) {
+				break;
+			}
 		}
+		return best;
 	}
 
 	//Gets all legal moves and generates scores for each
 	//Sorts scores to find highest and breaks ties when necessary
-	public void pickBestMove() {
+	public void pickBestMove(boolean color) {
+		this.color = !color;
+		this.currentColor = color;
+		
 		int count = g.list.size();
 
 		if(count == 0) {
@@ -92,7 +81,7 @@ public class Eval {
 		//Evaluating the position after each legal move
 		for(int i = 0; i < count; i++) {
 			g.move(g.list.get(i));
-			scores[i] = getScore(0, -100, 100);
+			scores[i] = getScore(0, -100, 100, currentColor);
 			g.undoMove();
 		}
 		
@@ -117,6 +106,9 @@ public class Eval {
 		// }
 		// System.out.println();
 		// System.out.println("Total visited positions: " + totalCount);
+		
+		//Resetting
+		totalCount = 0;
 
 		//Finding how many moves are tied in score
 		double topScore = scores[0];

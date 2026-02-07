@@ -3,11 +3,12 @@ package project;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
-
 import org.java_websocket.WebSocket;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 
 public class Game {
 	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -23,7 +24,9 @@ public class Game {
 	int[][] board;
 	int color;
 	int status;
+	boolean lastMove;
 	
+	Random rand;
 	Crd[][] PIECE_MOVES;
 	MoveStack stack;
 	ArrayList<Move> list;
@@ -31,6 +34,7 @@ public class Game {
 	Player currentPlayer;
 	Player white;
 	Player black;
+	WebSocket conn;
 
 	public Move isMoveLegal(Crd init, Crd dest, int promote) {
 		for(int i = 0; i < list.size(); i++) {
@@ -49,8 +53,13 @@ public class Game {
 		}
 	}
 
-	public int materialDiff() {
-		return black.material - white.material;
+	public int materialDiff(boolean cColor) {
+		if(cColor) {
+			return white.material - black.material;
+		} else {
+			return black.material - white.material;
+		}
+		
 	}
 
 	public boolean inBounds(Crd dest) {
@@ -62,17 +71,23 @@ public class Game {
 	}
 
 	public void computerMove() {
-		eval.pickBestMove();
+		//System.out.println("Player " + currentPlayer.color);
+		eval.pickBestMove(currentPlayer.color);
 		if(!list.isEmpty()) {
 			Move mv = list.get(0);
 			move(mv);
 		}
+		lastMove = true;
+		findLegalMoves(list);
+		updateGameStatus();
+		sendBoard();
 	}
 
 	public void move(Move mv) {
 		mv.enter();
 		stack.push(mv);
 		changeTurn();
+		lastMove = false;
 	}
 
 	public void changeTurn() {
@@ -87,10 +102,10 @@ public class Game {
 
 	public void undoMove() {
 		Move mv = stack.pop();
-		if(mv == null) 
-			return;
+		if(mv == null) return;
 		mv.undo();
 		changeTurn();
+		lastMove = !lastMove;
 	}
 
 	public void canEnPassant() {
@@ -425,23 +440,23 @@ public class Game {
 		return true;
 	}
 
-	public void handleCommand(String desc, WebSocket conn) {
+	public void handleCommand(String desc) {
 		if(desc.equals("undo")) {
 			//One ply undo if game ends on player's turn
-			if(color < 7) undoMove();
+			//if(status != 0) undoMove();
 			undoMove();
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard(conn);
+			sendBoard();
 		} else if(desc.equals("reset")) {
 			reset();
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard(conn);
+			sendBoard();
 		}
 	}
 
-	public void handleCrdInput(JSONArray move, WebSocket conn) {		
+	public void handleCrdInput(JSONArray move) {		
 		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
 		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
 
@@ -453,23 +468,21 @@ public class Game {
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard(conn);
+			sendBoard();
 			
 			//Computer move response
 			computerMove();
-			findLegalMoves(list);
-			updateGameStatus();
-			sendBoard(conn);
 		} else {
-			sendBoard(conn);
+			sendBoard();
 		}
 	} 
 
-	public void sendBoard(WebSocket conn) {
+	public void sendBoard() {
 		JSONObject message = new JSONObject();
 		
 		//BoardState
 		JSONArray boardState = new JSONArray();
+
 		for (int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
 				boardState.put(board[i][j]);
@@ -586,9 +599,12 @@ public class Game {
 		list.ensureCapacity(50);
 		eval = new Eval(this);
 		findLegalMoves(list);
+		if(rand.nextBoolean()) computerMove();
     }
 
-	public Game() {
+	public Game(WebSocket conn) {
+		this.conn = conn;
+		rand = new Random();
 		PIECE_MOVES = new Crd[13][];
 		try {
 			Scanner scan = new Scanner(new File("vectors.txt"));

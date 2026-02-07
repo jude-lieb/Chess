@@ -22,7 +22,7 @@ app.use(express.static(path.join(__dirname, "public")));
 const server = deployed ? https.createServer(credentials, app) : http.createServer(app);
 
 server.listen(port, () => {
-  console.log(`Live at https://localhost:${port}`);
+  if(!deployed) console.log(`Live at https://localhost:${port}`)
 });
 
 const wss = new WebSocket.Server({ server });

@@ -3,12 +3,12 @@ package project;
 import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.java_websocket.WebSocket;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 
 public class Server extends WebSocketServer {
 
@@ -23,12 +23,12 @@ public class Server extends WebSocketServer {
         System.out.println("New connection: " + conn.getRemoteSocketAddress());
 
 		//Adding game to session map
-		Game newGame = new Game();
+		Game newGame = new Game(conn);
 		games.put(conn, newGame);
        
         newGame.reset();
         newGame.updateGameStatus();
-        newGame.sendBoard(conn);
+        newGame.sendBoard();
     }
 
     @Override
@@ -43,9 +43,9 @@ public class Server extends WebSocketServer {
 		//Determine purpose of the message using description
 		if(desc.equals("move request")) {
 			JSONArray values = json.getJSONArray("crd");
-			game.handleCrdInput(values, conn);
+			game.handleCrdInput(values);
 		} else {
-			game.handleCommand(desc, conn);
+			game.handleCommand(desc);
 		}
     }
 
@@ -67,6 +67,7 @@ public class Server extends WebSocketServer {
 
     public static void main(String[] args) {
         Server server = new Server(3000);
+        server.setReuseAddr(true);
         server.start();
         System.out.println("Server running on localhost:3000");
     }
