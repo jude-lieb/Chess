@@ -7,6 +7,7 @@ public class Player {
     int promoteType;
     boolean queenside;
     boolean kingside;
+    boolean color;
     String title;
     Mod[] ks;
     Mod[] qs;
@@ -17,6 +18,7 @@ public class Player {
         ks = new Mod[4];
         qs = new Mod[4];
         if(type.equals("White")){
+            color = true;
             promoteType = 5;
             //White Qingside
             ks[0] = new Mod(new Crd(7, 4), 6, 0);
@@ -31,6 +33,7 @@ public class Player {
             qs[3] = new Mod(new Crd(7, 3), 0, 4);
         } else {
             promoteType = 11;
+            color = false;
             //Black Kingside
             ks[0] = new Mod(new Crd(0, 4), 12, 0);
             ks[1] = new Mod(new Crd(0, 6), 0, 12);
@@ -43,13 +46,5 @@ public class Player {
             qs[2] = new Mod(new Crd(0, 0), 10, 0);
             qs[3] = new Mod(new Crd(0, 3), 0, 10);
         }
-	}
-
-    public void changePromotion() {
-		if(promoteType < 5) {
-			promoteType++;
-		} else {
-			promoteType = 2;
-		}
 	}
 }

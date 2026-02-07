@@ -4,10 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import org.java_websocket.WebSocket;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 
 public class Game {
 	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -49,8 +49,13 @@ public class Game {
 		}
 	}
 
-	public int materialDiff() {
-		return black.material - white.material;
+	public int materialDiff(boolean cColor) {
+		if(cColor) {
+			return white.material - black.material;
+		} else {
+			return black.material - white.material;
+		}
+		
 	}
 
 	public boolean inBounds(Crd dest) {
@@ -62,7 +67,8 @@ public class Game {
 	}
 
 	public void computerMove() {
-		eval.pickBestMove();
+		System.out.println("Player " + currentPlayer.color);
+		eval.pickBestMove(currentPlayer.color);
 		if(!list.isEmpty()) {
 			Move mv = list.get(0);
 			move(mv);
@@ -87,8 +93,7 @@ public class Game {
 
 	public void undoMove() {
 		Move mv = stack.pop();
-		if(mv == null) 
-			return;
+		if(mv == null) return;
 		mv.undo();
 		changeTurn();
 	}
@@ -428,7 +433,7 @@ public class Game {
 	public void handleCommand(String desc, WebSocket conn) {
 		if(desc.equals("undo")) {
 			//One ply undo if game ends on player's turn
-			if(color < 7) undoMove();
+			//if(status != 0) undoMove();
 			undoMove();
 			findLegalMoves(list);
 			updateGameStatus();
