@@ -44,7 +44,7 @@ public class Eval {
 			g.move(stat);
 			
 			//Recursive call to next position (then undo move)
-			int val = getScore(depth + 1, alpha, beta, !color);
+			int val = getScore(depth + 1, alpha, beta, !currentColor);
 			g.undoMove();
 			
 			if(currentColor == color) {
@@ -100,12 +100,12 @@ public class Eval {
 		}
 
 		//Displaying results
-		System.out.println();
-		for(int i = 0; i < count; i++) {
-			System.out.printf("%.2f ", scores[i]);
-		}
-		System.out.println();
-		System.out.println("Total visited positions: " + totalCount);
+		// System.out.println();
+		// for(int i = 0; i < count; i++) {
+		// 	System.out.printf("%.2f ", scores[i]);
+		// }
+		// System.out.println();
+		// System.out.println("Total visited positions: " + totalCount);
 		
 		//Resetting
 		totalCount = 0;
