@@ -11,11 +11,11 @@ import org.json.JSONObject;
 
 
 public class Game {
-	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-	// static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
@@ -457,11 +457,11 @@ public class Game {
 	}
 
 	public void handleCrdInput(JSONArray move) {		
-		Crd temp1 = new Crd(move.getInt(0), move.getInt(1));
-		Crd temp2 = new Crd(move.getInt(2), move.getInt(3));
+		Crd temp1 = new Crd(move.getInt(0) / 8, move.getInt(0) % 8);
+		Crd temp2 = new Crd(move.getInt(1) / 8, move.getInt(1) % 8);
 
 		//Checking with getint 4 as promote type
-		Move result = isMoveLegal(temp1, temp2, move.getInt(4));
+		Move result = isMoveLegal(temp1, temp2, move.getInt(2));
 
 		if(result != null) {
 			//Player move

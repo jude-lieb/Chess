@@ -1,7 +1,8 @@
 <script setup>
 import Panel from './Panel.vue'
 import Board from './Board.vue'
-import {ref, computed} from 'vue'
+import {ref} from 'vue'
+import PromoteModal from './PromoteModal.vue'
 
 const deployed = window.location.hostname === "judelieb.com"
 const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost")
@@ -11,14 +12,19 @@ const info = ref({
   bMat: null,
   moveCount: null,
   gameStatus: '',
+  autoQueen: true
 })
 
-let options = ref([])
-let board = ref([])
-let outlines = ref([])
-let isFlipped = ref(false)
+const options = ref([])
+const board = ref([])
+const outlines = ref([])
+const isFlipped = ref(false)
+const showModal = ref(false)
+
+//Move selection states (mode = start/end, crd = start, box = end)
 let mode = true
 let crd = -1
+let box = -1
 
 socket.onopen = () => {console.log("Connected to Java WebSocket!")}
 socket.onclose = () => {console.log("WebSocket connection closed.")}
@@ -59,7 +65,24 @@ function reset() {
   socket.send(JSON.stringify({ desc: "reset" }))
 }
 
+function handlePromote(type) {
+  let promote = type
+  if(board.value[crd] > 6) promote = type + 6
+  socket.send(JSON.stringify({desc: "move request", crd: [crd, box, promote]}))
+  mode = true
+  showModal.value = false
+}
+
+function cancelMove() {
+  mode = true
+  crd = -1
+  box = -1
+  outlines.value = []
+  showModal.value = false
+}
+
 function handleSelect(selected) {
+  console.log(mode)
   if (mode === true) {
     crd = selected
     outlines.value[selected] = 'green-outline'
@@ -70,6 +93,7 @@ function handleSelect(selected) {
     }
     mode = false
   } else {
+    box = selected
     outlines.value = []
     let approved = false
 
@@ -79,18 +103,27 @@ function handleSelect(selected) {
       }
     }
 
-    let promote = 0
-    const isWhitePawn = board[crd] === 1;
-    const isBlackPawn = board[crd] === 7;
-    const isPromotion = (isWhitePawn && clickedIndex < 8) || (isBlackPawn && clickedIndex > 55);
-
-    if(isPromotion) {
-      promote = isWhitePawn ? 5 : (isBlackPawn ? 11 : 0)
+    if(approved === false) {
+      cancelMove()
+      return
     }
 
-    mode = true
-    if(approved === true) {
-      socket.send(JSON.stringify({desc: "move request", crd: [Math.floor(crd / 8), crd % 8, Math.floor(selected / 8), selected % 8, promote]}))
+    let promote = 0
+    const isWhitePawn = board.value[crd] === 1;
+    const isBlackPawn = board.value[crd] === 7;
+    const isPromotion = (isWhitePawn && selected < 8) || (isBlackPawn && selected > 55);
+
+    if(isPromotion) {
+      if(info.value.autoQueen === true) {
+        promote = isWhitePawn ? 5 : (isBlackPawn ? 11 : 0);
+        socket.send(JSON.stringify({desc: "move request", crd: [crd, selected, promote]}))
+        mode = true
+      } else {
+        showModal.value = true
+      }
+    } else {
+      mode = true
+      socket.send(JSON.stringify({desc: "move request", crd: [crd, box, promote]}))
     }
   }
 }
@@ -100,7 +133,14 @@ function handleSelect(selected) {
   <div class="container">
     <main class="d-flex flex-column flex-md-row align-items-center align-items-md-start justify-content-center gap-3 w-100">
         <Board @select="handleSelect" :board :outlines :isFlipped></Board>
-        <Panel @reset="reset" @undo="undo" @flip="isFlipped = !isFlipped" :info></Panel>
-    </main>
+        <Panel 
+          :info
+          @reset="reset" 
+          @undo="undo" 
+          @flip="isFlipped = !isFlipped" 
+          @auto-queen="info.autoQueen = !info.autoQueen">
+        </Panel>
+        <PromoteModal :showModal @pick="handlePromote"></PromoteModal>
+      </main>
   </div>
 </template>
