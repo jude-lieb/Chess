@@ -1,10 +1,8 @@
 How to get it running:
-Download and install java version >=17 and add it to your environment variables path.
-Download and install maven and add it to your environment variables path.
-To start the backend, run "mvn clean install" and "mvn exec:java".
-Copy the .env_example file into a .env file in the frontend folder.
+This project needs Java and Maven installed to function.
+To start the backend, run "mvn clean install" and "mvn exec:java" from the backend folder.
 To start the frontend, run "npm i" and "npm start" (may need sudo) from the frontend folder.
-Navigate to the localhost address in your web browser.
+Navigate to localhost in your web browser to use the app.
 
 Developer: Jude Lieb
 
