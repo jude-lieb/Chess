@@ -11,11 +11,11 @@ import org.json.JSONObject;
 
 
 public class Game {
-	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-	static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
@@ -80,7 +80,6 @@ public class Game {
 		lastMove = true;
 		findLegalMoves(list);
 		updateGameStatus();
-		sendBoard();
 	}
 
 	public void move(Move mv) {
@@ -440,57 +439,48 @@ public class Game {
 		return true;
 	}
 
-	public void handleCommand(String desc) {
-		if(desc.equals("undo")) {
-			//One ply undo if game ends on player's turn
-			//if(status != 0) undoMove();
-			undoMove();
-			findLegalMoves(list);
-			updateGameStatus();
-			sendBoard();
-		} else if(desc.equals("reset")) {
-			reset();
-			findLegalMoves(list);
-			updateGameStatus();
-			sendBoard();
-		}
+	public void handleUndo() {
+		//One ply undo if game ends on player's turn
+		//if(status != 0) undoMove();
+		undoMove();
+		findLegalMoves(list);
+		updateGameStatus();
 	}
 
-	public void handleCrdInput(JSONArray move) {		
-		Crd temp1 = new Crd(move.getInt(0) / 8, move.getInt(0) % 8);
-		Crd temp2 = new Crd(move.getInt(1) / 8, move.getInt(1) % 8);
+	public void handleCrdInput(MoveRequest move) {		
+		Crd temp1 = new Crd(move.crd[0] / 8, move.crd[0] % 8);
+		Crd temp2 = new Crd(move.crd[1] / 8, move.crd[1] % 8);
 
 		//Checking with getint 4 as promote type
-		Move result = isMoveLegal(temp1, temp2, move.getInt(2));
+		Move result = isMoveLegal(temp1, temp2, move.crd[2]);
 
 		if(result != null) {
 			//Player move
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard();
 			
 			//Computer move response
 			computerMove();
-		} else {
-			sendBoard();
 		}
 	} 
 
-	public void sendBoard() {
-		JSONObject message = new JSONObject();
+	public BoardState getBoard() {
+		BoardState state = new BoardState();
+
+		//JSONObject message = new JSONObject();
 		
 		//BoardState
-		JSONArray boardState = new JSONArray();
+		int[] boardState = new int[64];
 
 		for (int i = 0; i < 8; i++) {
 			for(int j = 0; j < 8; j++) {
-				boardState.put(board[i][j]);
+				boardState[j + (8*i)] = board[i][j];
 			}
 		}
 
-		message.put("desc", "boardState");
-		message.put("squares", boardState);
+		state.setDesc("boardState");
+		state.setSquares(boardState);
 
 		//Options
 		int[][] holder = new int[64][28];
@@ -512,39 +502,38 @@ public class Game {
 			}
 		}
 
-		JSONArray options = new JSONArray();
+		int[][] options = new int[64][];
 		for (int i = 0; i < 64; i++) {
-			JSONArray moveset = new JSONArray();
+			int[] moveset = new int[allowed[i]];
 
 			for (int j = 0; j < allowed[i]; j++) {
-				moveset.put(holder[i][j]);
+				moveset[j] = holder[i][j];
 			}
-			options.put(moveset);
+			options[i] = moveset;
 		}
 
-		message.put("options", options);
+		state.setOptions(options);
 
 		//Status
 		if(status != 0) {
 			if(status == 1) {
-				message.put("status", "Checkmate!");
+				state.setStatus("Checkmate!");
 			} else {
-				message.put("status", "Draw by stalemate!");
+				state.setStatus("Draw By Stalemate");
 			}
 		} else {
-			message.put("status", "Normal");
+			state.setStatus("Normal");
 		}
-		
-		message.put("moveCount", list.size());
-		message.put("turn", currentPlayer.title);
-		message.put("wMat", white.material);
-		message.put("bMat", black.material);
 
-		String jsonString = message.toString();
-		conn.send(jsonString);
+		state.setMoveCount(list.size());
+		state.setTurn(currentPlayer.title);
+		state.setwMat(white.material);
+		state.setbMat(black.material);
+
+		return state;
 	}
 
-	public void reset() {
+	public void init() {
 		white = new Player("White");
 		black = new Player("Black");
 		currentPlayer = white;
@@ -602,8 +591,7 @@ public class Game {
 		if(rand.nextBoolean()) computerMove();
     }
 
-	public Game(WebSocket conn) {
-		this.conn = conn;
+	public Game() {
 		rand = new Random();
 		PIECE_MOVES = new Crd[13][];
 		try {

@@ -47,7 +47,7 @@ const emit = defineEmits(['reset','undo', 'flip', 'autoQueen'])
 
             <div class="d-flex flex-row gap-3 mt-2">
                 <button @click="emit('flip')" class="btn btn-primary">Flip Board</button>
-                <button @click="emit('reset')" class="btn btn-danger">🔁 Reset</button>
+                <button @click="emit('reset')" class="btn btn-danger">🔁 New</button>
                 <button @click="emit('undo')" class="btn btn-primary">↩️ Undo</button>
             </div>
         </li>

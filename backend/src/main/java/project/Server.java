@@ -1,75 +1,75 @@
-package project;
+// package project;
 
-import java.net.InetSocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import org.java_websocket.WebSocket;
-import org.java_websocket.handshake.ClientHandshake;
-import org.java_websocket.server.WebSocketServer;
-import org.json.JSONArray;
-import org.json.JSONObject;
+// import java.net.InetSocketAddress;
+// import java.util.Map;
+// import java.util.concurrent.ConcurrentHashMap;
+// import org.java_websocket.WebSocket;
+// import org.java_websocket.handshake.ClientHandshake;
+// import org.java_websocket.server.WebSocketServer;
+// import org.json.JSONArray;
+// import org.json.JSONObject;
 
 
-public class Server extends WebSocketServer {
+// public class Server extends WebSocketServer {
 
-	private final Map<WebSocket, Game> games = new ConcurrentHashMap<>();
+// 	private final Map<WebSocket, Game> games = new ConcurrentHashMap<>();
     
-    public Server(int port) { 
-        super(new InetSocketAddress(port)); 
-    }
+//     public Server(int port) { 
+//         super(new InetSocketAddress(port)); 
+//     }
 
-    @Override
-    public void onOpen(WebSocket conn, ClientHandshake handshake) {
-        System.out.println("New connection: " + conn.getRemoteSocketAddress());
+//     @Override
+//     public void onOpen(WebSocket conn, ClientHandshake handshake) {
+//         System.out.println("New connection: " + conn.getRemoteSocketAddress());
 
-		//Adding game to session map
-		Game newGame = new Game(conn);
-		games.put(conn, newGame);
+// 		//Adding game to session map
+// 		Game newGame = new Game(conn);
+// 		games.put(conn, newGame);
        
-        newGame.reset();
-        newGame.updateGameStatus();
-        newGame.sendBoard();
-    }
+//         newGame.reset();
+//         newGame.updateGameStatus();
+//         newGame.sendBoard();
+//     }
 
-    @Override
-    public void onMessage(WebSocket conn, String message) {
-		Game game = games.get(conn);
-		if (game == null) return;
+//     @Override
+//     public void onMessage(WebSocket conn, String message) {
+// 		Game game = games.get(conn);
+// 		if (game == null) return;
 
-		JSONObject json = new JSONObject(message);
-		String desc = json.getString("desc");
-		//System.out.println("Description: " + desc);
+// 		JSONObject json = new JSONObject(message);
+// 		String desc = json.getString("desc");
+// 		//System.out.println("Description: " + desc);
 
-		//Determine purpose of the message using description
-		if(desc.equals("move request")) {
-			JSONArray values = json.getJSONArray("crd");
-			game.handleCrdInput(values);
-		} else {
-			game.handleCommand(desc);
-		}
-    }
+// 		//Determine purpose of the message using description
+// 		if(desc.equals("move request")) {
+// 			JSONArray values = json.getJSONArray("crd");
+// 			game.handleCrdInput(values);
+// 		} else {
+// 			game.handleCommand(desc);
+// 		}
+//     }
 
-    @Override
-    public void onStart() {
-        System.out.println("Starting server");
-    }
+//     @Override
+//     public void onStart() {
+//         System.out.println("Starting server");
+//     }
 
-    @Override
-    public void onClose(WebSocket conn, int code, String reason, boolean remote) {
-        System.out.println("Closed connection: " + conn.getRemoteSocketAddress());
-		games.remove(conn);
-    }
+//     @Override
+//     public void onClose(WebSocket conn, int code, String reason, boolean remote) {
+//         System.out.println("Closed connection: " + conn.getRemoteSocketAddress());
+// 		games.remove(conn);
+//     }
 
-    @Override
-    public void onError(WebSocket conn, Exception e) {
-        System.err.println("Error: " + e.getMessage());
-    }
+//     @Override
+//     public void onError(WebSocket conn, Exception e) {
+//         System.err.println("Error: " + e.getMessage());
+//     }
 
-    public static void main(String[] args) {
-        Server server = new Server(3000);
-        server.setReuseAddr(true);
-        server.start();
-        System.out.println("Server running on localhost:3000");
-    }
-}
+//     public static void main(String[] args) {
+//         Server server = new Server(3000);
+//         server.setReuseAddr(true);
+//         server.start();
+//         System.out.println("Server running on localhost:3000");
+//     }
+// }
 
