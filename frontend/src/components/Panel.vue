@@ -9,8 +9,9 @@ const emit = defineEmits(['reset','undo', 'flip', 'autoQueen'])
 <template>
     <ul class="list-group">
         <li class="list-group-item">
-            <strong class="mb-1 d-block">Material Count:</strong>
+            
             <div class="d-flex justify-content-between">
+                <strong class="mb-1 d-block">Material Count:</strong>
                 <div class="d-flex align-items-center">
                     <span class="me-1">♔</span>
                     <span>White:</span>

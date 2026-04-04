@@ -5,7 +5,7 @@ import {ref} from 'vue'
 import PromoteModal from './PromoteModal.vue'
 
 const deployed = window.location.hostname === "judelieb.com"
-const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost")
+const socket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
 
 const info = ref({
   wMat: null,
@@ -82,7 +82,6 @@ function cancelMove() {
 }
 
 function handleSelect(selected) {
-  console.log(mode)
   if (mode === true) {
     crd = selected
     outlines.value[selected] = 'green-outline'
@@ -107,6 +106,10 @@ function handleSelect(selected) {
       cancelMove()
       return
     }
+
+    board.value[selected] = board.value[crd]; // move piece visually
+    board.value[crd] = 0
+    outlines.value = []
 
     let promote = 0
     const isWhitePawn = board.value[crd] === 1;

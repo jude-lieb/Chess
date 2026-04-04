@@ -17,7 +17,7 @@ const images = [
 </script>
 
 <template>
-  <div id="board" class="grid-container">
+  <div id="board" class="grid-container mt-1">
     <div v-for="i in 64" class="grid-item" :key="i">
       <img :class="outlines[getSquare(i-1)]" @click="emit('select', getSquare(i-1))" :src="'/images/'+(images[board[getSquare(i-1)]] || 'blank.jpg')" draggable="false" />
     </div>
@@ -34,6 +34,7 @@ const images = [
     background-image: url("/images/board.png");
     background-size: cover;
     background-repeat: no-repeat;
+    touch-action: manipulation;
 }
 .grid-item {
     display: flex;
