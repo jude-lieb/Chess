@@ -108,6 +108,10 @@ function handleSelect(selected) {
       return
     }
 
+    board.value[selected] = board.value[crd]; // move piece visually
+    board.value[crd] = 0
+    outlines.value = []
+
     let promote = 0
     const isWhitePawn = board.value[crd] === 1;
     const isBlackPawn = board.value[crd] === 7;
