@@ -82,7 +82,6 @@ function cancelMove() {
 }
 
 function handleSelect(selected) {
-  console.log(mode)
   if (mode === true) {
     crd = selected
     outlines.value[selected] = 'green-outline'
