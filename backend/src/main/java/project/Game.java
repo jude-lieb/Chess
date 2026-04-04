@@ -5,17 +5,17 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
-import org.java_websocket.WebSocket;
+import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.TextMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-
 public class Game {
-	// static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	static int[] SET = {10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
     
-	static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
+	// static int[] SET = {10,8,9,11,12,9,8,10,1,1,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	// 	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,7,1,1,1,1,1,1,4,2,3,5,6,3,2,4};
 
 	static int[] MOVE_COUNTS = {0, 4, 8, 28, 28, 56, 8, 4, 8, 28, 28, 56, 8}; 
 	int[] PIECE_VALUES = {0,1,3,3,5,9,20,1,3,3,5,9,20};
@@ -34,7 +34,7 @@ public class Game {
 	Player currentPlayer;
 	Player white;
 	Player black;
-	WebSocket conn;
+	WebSocketSession conn;
 
 	public Move isMoveLegal(Crd init, Crd dest, int promote) {
 		for(int i = 0; i < list.size(); i++) {
@@ -208,7 +208,7 @@ public class Game {
 		}
 	}
 
-	public void findLegalMoves(ArrayList list) {
+	public void findLegalMoves(ArrayList<Move> list) {
 		int ctemp = color;
 		list.clear();
 		canCastle();
@@ -478,70 +478,75 @@ public class Game {
 	} 
 
 	public void sendBoard() {
-		JSONObject message = new JSONObject();
-		
-		//BoardState
-		JSONArray boardState = new JSONArray();
+		try {
+			JSONObject message = new JSONObject();
 
-		for (int i = 0; i < 8; i++) {
-			for(int j = 0; j < 8; j++) {
-				boardState.put(board[i][j]);
-			}
-		}
-
-		message.put("desc", "boardState");
-		message.put("squares", boardState);
-
-		//Options
-		int[][] holder = new int[64][28];
-		int[] allowed = new int[64];
-
-		for (int i = 0; i < list.size(); i++) {
-			Crd current = list.get(i).getInit();
-			int start = (8 * current.y) + current.x;
-
-			holder[start][0] = start;
-			allowed[start] = 0;
-
-			for (int j = 0; j < list.size(); j++) {
-				if (list.get(j).getInit().equals(current)) {
-					holder[start][allowed[start]] = (8 * list.get(j).getDest().y) 
-						+ list.get(j).getDest().x;
-					allowed[start]++;
+			// BoardState
+			JSONArray boardState = new JSONArray();
+			for (int i = 0; i < 8; i++) {
+				for (int j = 0; j < 8; j++) {
+					boardState.put(board[i][j]);
 				}
 			}
-		}
 
-		JSONArray options = new JSONArray();
-		for (int i = 0; i < 64; i++) {
-			JSONArray moveset = new JSONArray();
+			message.put("desc", "boardState");
+			message.put("squares", boardState);
 
-			for (int j = 0; j < allowed[i]; j++) {
-				moveset.put(holder[i][j]);
+			// Options
+			int[][] holder = new int[64][28];
+			int[] allowed = new int[64];
+
+			for (int i = 0; i < list.size(); i++) {
+				Crd current = list.get(i).getInit();
+				int start = (8 * current.y) + current.x;
+
+				holder[start][0] = start;
+				allowed[start] = 0;
+
+				for (int j = 0; j < list.size(); j++) {
+					if (list.get(j).getInit().equals(current)) {
+						holder[start][allowed[start]] =
+							(8 * list.get(j).getDest().y) + list.get(j).getDest().x;
+						allowed[start]++;
+					}
+				}
 			}
-			options.put(moveset);
-		}
 
-		message.put("options", options);
+			JSONArray options = new JSONArray();
+			for (int i = 0; i < 64; i++) {
+				JSONArray moveset = new JSONArray();
+				for (int j = 0; j < allowed[i]; j++) {
+					moveset.put(holder[i][j]);
+				}
+				options.put(moveset);
+			}
 
-		//Status
-		if(status != 0) {
-			if(status == 1) {
-				message.put("status", "Checkmate!");
+			message.put("options", options);
+
+			// Status
+			if (status != 0) {
+				if (status == 1) {
+					message.put("status", "Checkmate!");
+				} else {
+					message.put("status", "Draw by stalemate!");
+				}
 			} else {
-				message.put("status", "Draw by stalemate!");
+				message.put("status", "Normal");
 			}
-		} else {
-			message.put("status", "Normal");
-		}
-		
-		message.put("moveCount", list.size());
-		message.put("turn", currentPlayer.title);
-		message.put("wMat", white.material);
-		message.put("bMat", black.material);
 
-		String jsonString = message.toString();
-		conn.send(jsonString);
+			message.put("moveCount", list.size());
+			message.put("turn", currentPlayer.title);
+			message.put("wMat", white.material);
+			message.put("bMat", black.material);
+
+			String jsonString = message.toString();
+
+			// ✅ Spring way to send message
+			conn.sendMessage(new TextMessage(jsonString));
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void reset() {
@@ -602,7 +607,7 @@ public class Game {
 		if(rand.nextBoolean()) computerMove();
     }
 
-	public Game(WebSocket conn) {
+	public Game(WebSocketSession conn) {
 		this.conn = conn;
 		rand = new Random();
 		PIECE_MOVES = new Crd[13][];

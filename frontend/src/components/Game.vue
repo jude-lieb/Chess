@@ -5,7 +5,7 @@ import {ref} from 'vue'
 import PromoteModal from './PromoteModal.vue'
 
 const deployed = window.location.hostname === "judelieb.com"
-const socket = new WebSocket(deployed ? "wss://judelieb.com" : "ws://localhost")
+const socket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
 
 const info = ref({
   wMat: null,
