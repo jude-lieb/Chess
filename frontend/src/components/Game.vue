@@ -5,7 +5,7 @@ import {ref} from 'vue'
 import PromoteModal from './PromoteModal.vue'
 
 const deployed = window.location.hostname === "judelieb.com"
-const socket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
+let socket = null
 
 const info = ref({
   wMat: null,
@@ -26,24 +26,30 @@ let mode = true
 let crd = -1
 let box = -1
 
-socket.onopen = () => {console.log("Connected to Java WebSocket!")}
-socket.onclose = () => {console.log("WebSocket connection closed.")}
-socket.onerror = (error) => {console.log("WebSocket Error:", error)}
+function getWebSocket() {
+  let newSocket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
 
-socket.onmessage = (event) => {
-  try {
-    const data = JSON.parse(event.data)
-    if(data.desc === "boardState") {
-      board.value = data.squares
-      options.value = data.options
-      info.value.gameStatus = data.status
-      info.value.moveCount = data.moveCount
-      info.value.wMat = data.wMat
-      info.value.bMat = data.bMat
+  newSocket.onopen = () => {console.log("Web socket connected.")}
+  newSocket.onclose = () => {console.log("Web socket disconnected.")}
+  newSocket.onerror = (error) => {console.log("Web socket error:", error)}
+
+  newSocket.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)
+      if(data.desc === "boardState") {
+        board.value = data.squares
+        options.value = data.options
+        isFlipped.value = !data.turn
+        info.value.gameStatus = data.status
+        info.value.moveCount = data.moveCount
+        info.value.wMat = data.wMat
+        info.value.bMat = data.bMat
+      }
+    } catch (error) {
+      console.log("Error handling server input", error)
     }
-  } catch (error) {
-    console.log("Error handling server input", error)
   }
+  return newSocket
 }
 
 //Preventing websocket closure
@@ -58,11 +64,13 @@ function undo() {
   socket.send(JSON.stringify({ desc: "undo" }))
 }
 
-function reset() {
+function newGame() {
+  socket.close()
+  socket = getWebSocket()
+
   mode = true
   options.value = []
   outlines.value = []
-  socket.send(JSON.stringify({ desc: "reset" }))
 }
 
 function handlePromote(type) {
@@ -107,14 +115,14 @@ function handleSelect(selected) {
       return
     }
 
-    board.value[selected] = board.value[crd]; // move piece visually
+    board.value[selected] = board.value[crd]
     board.value[crd] = 0
     outlines.value = []
 
     let promote = 0
-    const isWhitePawn = board.value[crd] === 1;
-    const isBlackPawn = board.value[crd] === 7;
-    const isPromotion = (isWhitePawn && selected < 8) || (isBlackPawn && selected > 55);
+    const isWhitePawn = board.value[crd] === 1
+    const isBlackPawn = board.value[crd] === 7
+    const isPromotion = (isWhitePawn && selected < 8) || (isBlackPawn && selected > 55)
 
     if(isPromotion) {
       if(info.value.autoQueen === true) {
@@ -130,6 +138,9 @@ function handleSelect(selected) {
     }
   }
 }
+
+socket = getWebSocket()
+
 </script>
 
 <template>
@@ -138,9 +149,8 @@ function handleSelect(selected) {
         <Board @select="handleSelect" :board :outlines :isFlipped></Board>
         <Panel 
           :info
-          @reset="reset" 
+          @newGame="newGame" 
           @undo="undo" 
-          @flip="isFlipped = !isFlipped" 
           @auto-queen="info.autoQueen = !info.autoQueen">
         </Panel>
         <PromoteModal :showModal @pick="handlePromote"></PromoteModal>

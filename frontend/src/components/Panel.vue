@@ -3,25 +3,20 @@ const props = defineProps({
     info: {}
 })
 
-const emit = defineEmits(['reset','undo', 'flip', 'autoQueen'])
+const emit = defineEmits(['newGame','undo', 'autoQueen'])
 </script>
 
 <template>
     <ul class="list-group">
         <li class="list-group-item">
-            
-            <div class="d-flex justify-content-between">
-                <strong class="mb-1 d-block">Material Count:</strong>
-                <div class="d-flex align-items-center">
-                    <span class="me-1">♔</span>
-                    <span>White:</span>
-                    <span id="whiteMaterial" class="ms-1"> {{info.wMat}}</span>
-                </div>
-                <div class="d-flex align-items-center">
-                    <span class="me-1">♚</span>
-                    <span>Black:</span>
-                    <span id="blackMaterial" class="ms-1"> {{info.bMat}}</span>
-                </div>
+            <div class="d-flex">
+                <strong class="me-1">Material: </strong>
+                <span class="me-1">♔</span>
+                <span>White</span>
+                <span id="whiteMaterial" class="ms-1"> {{info.wMat}}</span>
+                <span class="me-1">♚</span>
+                <span>Black</span>
+                <span id="blackMaterial" class="ms-1"> {{info.bMat}}</span>
             </div>
         </li>
 
@@ -45,10 +40,8 @@ const emit = defineEmits(['reset','undo', 'flip', 'autoQueen'])
         </li>
 
         <li class="list-group-item">
-
             <div class="d-flex flex-row gap-3 mt-2">
-                <button @click="emit('flip')" class="btn btn-primary">Flip Board</button>
-                <button @click="emit('reset')" class="btn btn-danger">🔁 Reset</button>
+                <button @click="emit('newGame')" class="btn btn-danger">🔁 New</button>
                 <button @click="emit('undo')" class="btn btn-primary">↩️ Undo</button>
             </div>
         </li>

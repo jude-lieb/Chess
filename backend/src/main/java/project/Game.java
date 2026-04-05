@@ -80,7 +80,6 @@ public class Game {
 		lastMove = true;
 		findLegalMoves(list);
 		updateGameStatus();
-		sendBoard();
 	}
 
 	public void move(Move mv) {
@@ -468,10 +467,10 @@ public class Game {
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard();
 			
 			//Computer move response
 			computerMove();
+			sendBoard();
 		} else {
 			sendBoard();
 		}
@@ -535,7 +534,7 @@ public class Game {
 			}
 
 			message.put("moveCount", list.size());
-			message.put("turn", currentPlayer.title);
+			message.put("turn", currentPlayer.title == "White");
 			message.put("wMat", white.material);
 			message.put("bMat", black.material);
 
