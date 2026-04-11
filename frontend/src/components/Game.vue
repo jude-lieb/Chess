@@ -12,7 +12,8 @@ const info = ref({
   bMat: null,
   moveCount: null,
   gameStatus: '',
-  autoQueen: true
+  autoQueen: true,
+  player: true
 })
 
 const options = ref([])
@@ -29,7 +30,10 @@ let box = -1
 function getWebSocket() {
   let newSocket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
 
-  newSocket.onopen = () => {console.log("Web socket connected.")}
+  newSocket.onopen = () => {
+    console.log("Web socket connected.")
+    newSocket.send(JSON.stringify({ desc: "new", player: info.value.player }))
+  }
   newSocket.onclose = () => {console.log("Web socket disconnected.")}
   newSocket.onerror = (error) => {console.log("Web socket error:", error)}
 
@@ -67,7 +71,6 @@ function undo() {
 function newGame() {
   socket.close()
   socket = getWebSocket()
-
   mode = true
   options.value = []
   outlines.value = []
@@ -151,7 +154,8 @@ socket = getWebSocket()
           :info
           @newGame="newGame" 
           @undo="undo" 
-          @auto-queen="info.autoQueen = !info.autoQueen">
+          @auto-queen="info.autoQueen = !info.autoQueen"
+          @changeColor="info.player = !info.player">
         </Panel>
         <PromoteModal :showModal @pick="handlePromote"></PromoteModal>
       </main>

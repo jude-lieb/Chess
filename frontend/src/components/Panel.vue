@@ -3,7 +3,7 @@ const props = defineProps({
     info: {}
 })
 
-const emit = defineEmits(['newGame','undo', 'autoQueen'])
+const emit = defineEmits(['newGame','undo', 'autoQueen', 'changeColor'])
 </script>
 
 <template>
@@ -35,6 +35,14 @@ const emit = defineEmits(['newGame','undo', 'autoQueen'])
                 </label>
                 <div class="form-check form-switch">
                     <input @click="emit('autoQueen')" :checked="info.autoQueen" class="form-check-input" type="checkbox" role="switch">
+                </div>
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <label class="form-check-label" for="autoqueenSwitch">
+                    <strong>Play as black</strong>
+                </label>
+                <div class="form-check form-switch">
+                    <input @click="emit('changeColor')" :checked="!info.player" class="form-check-input" type="checkbox" role="switch">
                 </div>
             </div>
         </li>
