@@ -3,7 +3,6 @@ package project;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Scanner;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.TextMessage;
@@ -26,7 +25,6 @@ public class Game {
 	int status;
 	boolean lastMove;
 	
-	Random rand;
 	Crd[][] PIECE_MOVES;
 	MoveStack stack;
 	ArrayList<Move> list;
@@ -80,7 +78,6 @@ public class Game {
 		lastMove = true;
 		findLegalMoves(list);
 		updateGameStatus();
-		sendBoard();
 	}
 
 	public void move(Move mv) {
@@ -443,13 +440,8 @@ public class Game {
 	public void handleCommand(String desc) {
 		if(desc.equals("undo")) {
 			//One ply undo if game ends on player's turn
-			//if(status != 0) undoMove();
+			if(status != 0) undoMove();
 			undoMove();
-			findLegalMoves(list);
-			updateGameStatus();
-			sendBoard();
-		} else if(desc.equals("reset")) {
-			reset();
 			findLegalMoves(list);
 			updateGameStatus();
 			sendBoard();
@@ -468,10 +460,10 @@ public class Game {
 			move(result);
 			findLegalMoves(list);
 			updateGameStatus();
-			sendBoard();
 			
 			//Computer move response
 			computerMove();
+			sendBoard();
 		} else {
 			sendBoard();
 		}
@@ -535,7 +527,7 @@ public class Game {
 			}
 
 			message.put("moveCount", list.size());
-			message.put("turn", currentPlayer.title);
+			message.put("turn", currentPlayer.title == "White");
 			message.put("wMat", white.material);
 			message.put("bMat", black.material);
 
@@ -549,7 +541,31 @@ public class Game {
 		}
 	}
 
-	public void reset() {
+	public Game(WebSocketSession conn, boolean player) {
+		this.conn = conn;
+		PIECE_MOVES = new Crd[13][];
+		try {
+			Scanner scan = new Scanner(new File("vectors.txt"));
+			int read_Y, read_X;
+
+			for(int i = 0; i < 13; i++) { 
+				PIECE_MOVES[i] = new Crd[MOVE_COUNTS[i]];
+
+				if(i > 7) {
+					PIECE_MOVES[i] = PIECE_MOVES[i-6];
+				} else {
+					for(int j = 0; j < MOVE_COUNTS[i]; j++) {
+						read_Y = Integer.parseInt(scan.next());
+						read_X = Integer.parseInt(scan.next());
+						PIECE_MOVES[i][j] = new Crd(read_Y, read_X);
+					}
+				}
+			}
+			scan.close();
+		} catch (FileNotFoundException e) {
+			System.out.println("File Error");
+		}
+		
 		white = new Player("White");
 		black = new Player("Black");
 		currentPlayer = white;
@@ -604,34 +620,7 @@ public class Game {
 		list.ensureCapacity(50);
 		eval = new Eval(this);
 		findLegalMoves(list);
-		if(rand.nextBoolean()) computerMove();
-    }
-
-	public Game(WebSocketSession conn) {
-		this.conn = conn;
-		rand = new Random();
-		PIECE_MOVES = new Crd[13][];
-		try {
-			Scanner scan = new Scanner(new File("vectors.txt"));
-			int read_Y, read_X;
-
-			for(int i = 0; i < 13; i++) { 
-				PIECE_MOVES[i] = new Crd[MOVE_COUNTS[i]];
-
-				if(i > 7) {
-					PIECE_MOVES[i] = PIECE_MOVES[i-6];
-				} else {
-					for(int j = 0; j < MOVE_COUNTS[i]; j++) {
-						read_Y = Integer.parseInt(scan.next());
-						read_X = Integer.parseInt(scan.next());
-						PIECE_MOVES[i][j] = new Crd(read_Y, read_X);
-					}
-				}
-			}
-			scan.close();
-		} catch (FileNotFoundException e) {
-			System.out.println("File Error");
-		}
-    }
+		if(!player) computerMove();
+	}
 }
 

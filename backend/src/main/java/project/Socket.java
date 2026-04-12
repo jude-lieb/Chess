@@ -14,28 +14,32 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 @Component
 public class Socket extends TextWebSocketHandler {
 
-    private final Map<WebSocketSession, Game> games = new ConcurrentHashMap<>();
+    private final Map<String, Game> games = new ConcurrentHashMap<>();
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         System.out.println("New connection: " + session.getRemoteAddress());
-
-        // Create and store game instance
-        Game newGame = new Game(session);
-        games.put(session, newGame);
-
-        newGame.reset();
-        newGame.updateGameStatus();
-        newGame.sendBoard();
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Game game = games.get(session);
-        if (game == null) return;
-
         JSONObject json = new JSONObject(message.getPayload());
         String desc = json.getString("desc");
+
+        if("new".equals(desc)) {
+            boolean player = json.getBoolean("player");
+            
+            // Create and store game instance
+            Game newGame = new Game(session, player);
+            games.put(session.getId(), newGame);
+            newGame.updateGameStatus();
+            newGame.sendBoard();
+            System.out.println("new game with player " + player);
+            return;
+        }
+
+        Game game = games.get(session.getId());
+        if (game == null) return;
 
         // Determine purpose of the message
         if ("move request".equals(desc)) {
@@ -54,7 +58,7 @@ public class Socket extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         System.out.println("Closed connection: " + session.getRemoteAddress());
-        games.remove(session);
+        games.remove(session.getId());
 
         System.out.println("Session ID: " + session.getId());
         System.out.println("Reason: " + status);
