@@ -21,6 +21,7 @@ const board = ref([])
 const outlines = ref([])
 const isFlipped = ref(false)
 const showModal = ref(false)
+let lights = []
 
 //Move selection states (mode = start/end, crd = start, box = end)
 let mode = true
@@ -41,6 +42,12 @@ function getWebSocket() {
     try {
       const data = JSON.parse(event.data)
       if(data.desc === "boardState") {
+        if(data.highlights !== "none") {
+          lights = data.highlights
+        } else {
+          lights = []
+        }
+        resetLights()
         board.value = data.squares
         options.value = data.options
         isFlipped.value = !data.turn
@@ -54,6 +61,11 @@ function getWebSocket() {
     }
   }
   return newSocket
+}
+
+function resetLights() {
+  outlines.value[lights[0]] = 'yellow-highlight'
+  outlines.value[lights[1]] = 'yellow-highlight'
 }
 
 //Preventing websocket closure
@@ -107,26 +119,32 @@ function handleSelect(selected) {
     outlines.value = []
     let approved = false
 
+    //Trying to find the move selection in the pre-loaded move list
     if(options.value[crd]) {
       for (let i = 0; i < options.value[crd].length; i++) {
         if(selected === options.value[crd][i]) approved = true
       }
     }
 
+    //Quick auto rejection for illegal move (will be double checked by server)
     if(approved === false) {
       cancelMove()
+      resetLights()
       return
     }
 
-    board.value[selected] = board.value[crd]
-    board.value[crd] = 0
-    outlines.value = []
-
+    //Determining whether the move is a promotion attempt
     let promote = 0
     const isWhitePawn = board.value[crd] === 1
     const isBlackPawn = board.value[crd] === 7
     const isPromotion = (isWhitePawn && selected < 8) || (isBlackPawn && selected > 55)
 
+    //Clearing outlines and making the move appear
+    //outlines.value = []
+    board.value[selected] = board.value[crd]
+    board.value[crd] = 0
+
+    //Handles promotion type in request; otherwise sends normal move
     if(isPromotion) {
       if(info.value.autoQueen === true) {
         promote = isWhitePawn ? 5 : (isBlackPawn ? 11 : 0);
@@ -142,6 +160,7 @@ function handleSelect(selected) {
   }
 }
 
+//Starting a default game as white
 socket = getWebSocket()
 
 </script>

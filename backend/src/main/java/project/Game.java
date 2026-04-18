@@ -439,8 +439,8 @@ public class Game {
 
 	public void handleCommand(String desc) {
 		if(desc.equals("undo")) {
-			//One ply undo if game ends on player's turn
-			if(status != 0) undoMove();
+			//Only one ply need be undone if the game has ended
+			if(status == 0) undoMove();
 			undoMove();
 			findLegalMoves(list);
 			updateGameStatus();
@@ -515,7 +515,6 @@ public class Game {
 
 			message.put("options", options);
 
-			// Status
 			if (status != 0) {
 				if (status == 1) {
 					message.put("status", "Checkmate!");
@@ -531,9 +530,17 @@ public class Game {
 			message.put("wMat", white.material);
 			message.put("bMat", black.material);
 
-			String jsonString = message.toString();
+			Move prev = stack.peek();
+			if(prev != null) {
+				JSONArray highlights = new JSONArray();
+				highlights.put((prev.start.square.y * 8) + prev.start.square.x);
+				highlights.put((prev.end.square.y * 8) + prev.end.square.x);
+				message.put("highlights", highlights);
+			} else {
+				message.put("highlights", "none");
+			}
 
-			// ✅ Spring way to send message
+			String jsonString = message.toString();
 			conn.sendMessage(new TextMessage(jsonString));
 
 		} catch (Exception e) {

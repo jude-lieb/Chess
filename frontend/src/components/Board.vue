@@ -53,13 +53,17 @@ const images = [
 }
 
 .red-outline {
-    outline: 2px solid red;
-    outline-offset: -4px;
+    outline: 2px solid black;
+    background-color: red;
 }
 
 .green-outline {
-    outline: 2px solid green;
-    outline-offset: -4px;
+    outline: 2px solid black;
+    background-color: green;
+}
+
+.yellow-highlight {
+    background-color: yellow;
 }
 </style>
 

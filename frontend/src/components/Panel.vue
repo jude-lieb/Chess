@@ -48,7 +48,7 @@ const emit = defineEmits(['newGame','undo', 'autoQueen', 'changeColor'])
         </li>
 
         <li class="list-group-item">
-            <div class="d-flex flex-row gap-3 mt-2">
+            <div class="d-flex flex-row gap-3">
                 <button @click="emit('newGame')" class="btn btn-danger">🔁 New</button>
                 <button @click="emit('undo')" class="btn btn-primary">↩️ Undo</button>
             </div>
