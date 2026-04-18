@@ -530,9 +530,17 @@ public class Game {
 			message.put("wMat", white.material);
 			message.put("bMat", black.material);
 
-			String jsonString = message.toString();
+			Move prev = stack.peek();
+			if(prev != null) {
+				JSONArray highlights = new JSONArray();
+				highlights.put((prev.start.square.y * 8) + prev.start.square.x);
+				highlights.put((prev.end.square.y * 8) + prev.end.square.x);
+				message.put("highlights", highlights);
+			} else {
+				message.put("highlights", "none");
+			}
 
-			// ✅ Spring way to send message
+			String jsonString = message.toString();
 			conn.sendMessage(new TextMessage(jsonString));
 
 		} catch (Exception e) {

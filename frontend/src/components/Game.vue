@@ -21,6 +21,7 @@ const board = ref([])
 const outlines = ref([])
 const isFlipped = ref(false)
 const showModal = ref(false)
+let lights = []
 
 //Move selection states (mode = start/end, crd = start, box = end)
 let mode = true
@@ -41,6 +42,12 @@ function getWebSocket() {
     try {
       const data = JSON.parse(event.data)
       if(data.desc === "boardState") {
+        if(data.highlights !== "none") {
+          lights = data.highlights
+        } else {
+          lights = []
+        }
+        resetLights()
         board.value = data.squares
         options.value = data.options
         isFlipped.value = !data.turn
@@ -54,6 +61,11 @@ function getWebSocket() {
     }
   }
   return newSocket
+}
+
+function resetLights() {
+  outlines.value[lights[0]] = 'yellow-highlight'
+  outlines.value[lights[1]] = 'yellow-highlight'
 }
 
 //Preventing websocket closure
@@ -117,6 +129,7 @@ function handleSelect(selected) {
     //Quick auto rejection for illegal move (will be double checked by server)
     if(approved === false) {
       cancelMove()
+      resetLights()
       return
     }
 
