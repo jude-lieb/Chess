@@ -439,8 +439,8 @@ public class Game {
 
 	public void handleCommand(String desc) {
 		if(desc.equals("undo")) {
-			//One ply undo if game ends on player's turn
-			if(status != 0) undoMove();
+			//Only one ply need be undone if the game has ended
+			if(status == 0) undoMove();
 			undoMove();
 			findLegalMoves(list);
 			updateGameStatus();
@@ -515,7 +515,6 @@ public class Game {
 
 			message.put("options", options);
 
-			// Status
 			if (status != 0) {
 				if (status == 1) {
 					message.put("status", "Checkmate!");
