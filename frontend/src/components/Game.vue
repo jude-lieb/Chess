@@ -139,11 +139,6 @@ function handleSelect(selected) {
     const isBlackPawn = board.value[crd] === 7
     const isPromotion = (isWhitePawn && selected < 8) || (isBlackPawn && selected > 55)
 
-    //Clearing outlines and making the move appear
-    //outlines.value = []
-    board.value[selected] = board.value[crd]
-    board.value[crd] = 0
-
     //Handles promotion type in request; otherwise sends normal move
     if(isPromotion) {
       if(info.value.autoQueen === true) {
@@ -154,6 +149,10 @@ function handleSelect(selected) {
         showModal.value = true
       }
     } else {
+      //Clearing outlines and making the move appear
+      //outlines.value = []
+      board.value[selected] = board.value[crd]
+      board.value[crd] = 0
       mode = true
       socket.send(JSON.stringify({desc: "move request", crd: [crd, box, promote]}))
     }
@@ -176,7 +175,7 @@ socket = getWebSocket()
           @auto-queen="info.autoQueen = !info.autoQueen"
           @changeColor="info.player = !info.player">
         </Panel>
-        <PromoteModal :showModal @pick="handlePromote"></PromoteModal>
+        <PromoteModal :showModal @pick="handlePromote" @cancel="cancelMove"></PromoteModal>
       </main>
   </div>
 </template>
