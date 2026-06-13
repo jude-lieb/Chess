@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.TextMessage;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -32,7 +30,6 @@ public class Game {
 	Player currentPlayer;
 	Player white;
 	Player black;
-	WebSocketSession conn;
 
 	public Move isMoveLegal(Crd init, Crd dest, int promote) {
 		for(int i = 0; i < list.size(); i++) {
@@ -437,18 +434,16 @@ public class Game {
 		return true;
 	}
 
-	public void handleCommand(String desc) {
-		if(desc.equals("undo")) {
-			//Only one ply need be undone if the game has ended
-			if(status == 0) undoMove();
-			undoMove();
-			findLegalMoves(list);
-			updateGameStatus();
-			sendBoard();
-		}
+	public String handleUndo() {
+		//Only one ply need be undone if the game has ended
+		if(status == 0) undoMove();
+		undoMove();
+		findLegalMoves(list);
+		updateGameStatus();
+		return sendBoard();
 	}
 
-	public void handleCrdInput(JSONArray move) {		
+	public String handleCrdInput(JSONArray move) {		
 		Crd temp1 = new Crd(move.getInt(0) / 8, move.getInt(0) % 8);
 		Crd temp2 = new Crd(move.getInt(1) / 8, move.getInt(1) % 8);
 
@@ -463,93 +458,89 @@ public class Game {
 			
 			//Computer move response
 			computerMove();
-			sendBoard();
+			return sendBoard();
 		} else {
-			sendBoard();
+			return sendBoard();
 		}
 	} 
 
-	public void sendBoard() {
-		try {
-			JSONObject message = new JSONObject();
+	public String sendBoard() {
+		JSONObject message = new JSONObject();
 
-			// BoardState
-			JSONArray boardState = new JSONArray();
-			for (int i = 0; i < 8; i++) {
-				for (int j = 0; j < 8; j++) {
-					boardState.put(board[i][j]);
-				}
+		//JSONArray connections = new JSONArray();
+		//message.put("connection", conn.getId());
+
+		// BoardState
+		JSONArray boardState = new JSONArray();
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
+				boardState.put(board[i][j]);
 			}
-
-			message.put("desc", "boardState");
-			message.put("squares", boardState);
-
-			// Options
-			int[][] holder = new int[64][28];
-			int[] allowed = new int[64];
-
-			for (int i = 0; i < list.size(); i++) {
-				Crd current = list.get(i).getInit();
-				int start = (8 * current.y) + current.x;
-
-				holder[start][0] = start;
-				allowed[start] = 0;
-
-				for (int j = 0; j < list.size(); j++) {
-					if (list.get(j).getInit().equals(current)) {
-						holder[start][allowed[start]] =
-							(8 * list.get(j).getDest().y) + list.get(j).getDest().x;
-						allowed[start]++;
-					}
-				}
-			}
-
-			JSONArray options = new JSONArray();
-			for (int i = 0; i < 64; i++) {
-				JSONArray moveset = new JSONArray();
-				for (int j = 0; j < allowed[i]; j++) {
-					moveset.put(holder[i][j]);
-				}
-				options.put(moveset);
-			}
-
-			message.put("options", options);
-
-			if (status != 0) {
-				if (status == 1) {
-					message.put("status", "Checkmate!");
-				} else {
-					message.put("status", "Draw by stalemate!");
-				}
-			} else {
-				message.put("status", "Normal");
-			}
-
-			message.put("moveCount", list.size());
-			message.put("turn", currentPlayer.title == "White");
-			message.put("wMat", white.material);
-			message.put("bMat", black.material);
-
-			Move prev = stack.peek();
-			if(prev != null) {
-				JSONArray highlights = new JSONArray();
-				highlights.put((prev.start.square.y * 8) + prev.start.square.x);
-				highlights.put((prev.end.square.y * 8) + prev.end.square.x);
-				message.put("highlights", highlights);
-			} else {
-				message.put("highlights", "none");
-			}
-
-			String jsonString = message.toString();
-			conn.sendMessage(new TextMessage(jsonString));
-
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
+
+		message.put("desc", "boardState");
+		message.put("squares", boardState);
+
+		// Options
+		int[][] holder = new int[64][28];
+		int[] allowed = new int[64];
+
+		for (int i = 0; i < list.size(); i++) {
+			Crd current = list.get(i).getInit();
+			int start = (8 * current.y) + current.x;
+
+			holder[start][0] = start;
+			allowed[start] = 0;
+
+			for (int j = 0; j < list.size(); j++) {
+				if (list.get(j).getInit().equals(current)) {
+					holder[start][allowed[start]] =
+						(8 * list.get(j).getDest().y) + list.get(j).getDest().x;
+					allowed[start]++;
+				}
+			}
+		}
+
+		JSONArray options = new JSONArray();
+		for (int i = 0; i < 64; i++) {
+			JSONArray moveset = new JSONArray();
+			for (int j = 0; j < allowed[i]; j++) {
+				moveset.put(holder[i][j]);
+			}
+			options.put(moveset);
+		}
+
+		message.put("options", options);
+
+		if (status != 0) {
+			if (status == 1) {
+				message.put("status", "Checkmate!");
+			} else {
+				message.put("status", "Draw by stalemate!");
+			}
+		} else {
+			message.put("status", "Normal");
+		}
+
+		message.put("moveCount", list.size());
+		message.put("turn", currentPlayer.title == "White");
+		message.put("wMat", white.material);
+		message.put("bMat", black.material);
+
+		Move prev = stack.peek();
+		if(prev != null) {
+			JSONArray highlights = new JSONArray();
+			highlights.put((prev.start.square.y * 8) + prev.start.square.x);
+			highlights.put((prev.end.square.y * 8) + prev.end.square.x);
+			message.put("highlights", highlights);
+		} else {
+			message.put("highlights", "none");
+		}
+
+		return message.toString();
 	}
 
-	public Game(WebSocketSession conn, boolean player) {
-		this.conn = conn;
+	public Game(boolean player) {
 		PIECE_MOVES = new Crd[13][];
 		try {
 			Scanner scan = new Scanner(new File("vectors.txt"));

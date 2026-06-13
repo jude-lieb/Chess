@@ -42,6 +42,7 @@ function getWebSocket() {
     try {
       const data = JSON.parse(event.data)
       if(data.desc === "boardState") {
+
         if(data.highlights !== "none") {
           lights = data.highlights
         } else {
@@ -55,6 +56,11 @@ function getWebSocket() {
         info.value.moveCount = data.moveCount
         info.value.wMat = data.wMat
         info.value.bMat = data.bMat
+      }
+      if(data.desc === "connections") {
+        console.log(data.connections)
+      } else {
+        console.log("bruh")
       }
     } catch (error) {
       console.log("Error handling server input", error)
