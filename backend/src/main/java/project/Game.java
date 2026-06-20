@@ -22,6 +22,7 @@ public class Game {
 	int color;
 	int status;
 	boolean lastMove;
+	boolean isMulti;
 	
 	Crd[][] PIECE_MOVES;
 	MoveStack stack;
@@ -434,7 +435,7 @@ public class Game {
 		return true;
 	}
 
-	public String handleUndo() {
+	public JSONObject handleUndo() {
 		//Only one ply need be undone if the game has ended
 		if(status == 0) undoMove();
 		undoMove();
@@ -443,7 +444,7 @@ public class Game {
 		return sendBoard();
 	}
 
-	public String handleCrdInput(JSONArray move) {		
+	public JSONObject handleCrdInput(JSONArray move) {		
 		Crd temp1 = new Crd(move.getInt(0) / 8, move.getInt(0) % 8);
 		Crd temp2 = new Crd(move.getInt(1) / 8, move.getInt(1) % 8);
 
@@ -457,14 +458,12 @@ public class Game {
 			updateGameStatus();
 			
 			//Computer move response
-			computerMove();
-			return sendBoard();
-		} else {
-			return sendBoard();
+			if(!isMulti) computerMove();
 		}
+		return sendBoard();
 	} 
 
-	public String sendBoard() {
+	public JSONObject sendBoard() {
 		JSONObject message = new JSONObject();
 
 		//JSONArray connections = new JSONArray();
@@ -530,17 +529,21 @@ public class Game {
 		Move prev = stack.peek();
 		if(prev != null) {
 			JSONArray highlights = new JSONArray();
+			System.out.println("has some highlights");
 			highlights.put((prev.start.square.y * 8) + prev.start.square.x);
 			highlights.put((prev.end.square.y * 8) + prev.end.square.x);
 			message.put("highlights", highlights);
 		} else {
+			System.out.println("no highlights");
 			message.put("highlights", "none");
 		}
 
-		return message.toString();
+		return message;
 	}
 
-	public Game(boolean player) {
+	public Game(boolean player, boolean isMulti) {
+		
+		System.out.println("IsMulti " + isMulti);
 		PIECE_MOVES = new Crd[13][];
 		try {
 			Scanner scan = new Scanner(new File("vectors.txt"));
@@ -567,6 +570,7 @@ public class Game {
 		white = new Player("White");
 		black = new Player("Black");
 		currentPlayer = white;
+		this.isMulti = isMulti;
 
 		board = new int[BOARD_SIZE][BOARD_SIZE];
 		int piece;
@@ -618,7 +622,7 @@ public class Game {
 		list.ensureCapacity(50);
 		eval = new Eval(this);
 		findLegalMoves(list);
-		if(!player) computerMove();
+		if(!player && isMulti == false) computerMove();
 	}
 }
 

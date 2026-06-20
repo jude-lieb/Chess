@@ -1,49 +1,85 @@
 package project;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
+
 import java.util.Random;
 
 public class GameController {
-    public String player1;
-    public String player2;
+    public WebSocketSession player1;
+    public WebSocketSession player2;
     public Game game;
     boolean color;
     boolean isMulti;
     Random rand = new Random();
 
-    public String initializeGame() {
-        game = new Game(color);
+    public void initializeGame() {
+        System.out.println("sent game initial state");
+        game = new Game(color, isMulti);
         game.updateGameStatus();
-        return game.sendBoard();
+        JSONObject message = game.sendBoard();
+        refresh(game, message);
     }
 
-    public String handleMessage(JSONObject json) {
-        String desc = json.getString("desc");
+    public void refresh(Game game, JSONObject message) {
+        if(isMulti) {
+            if(!game.currentPlayer.color) {
+                message.put("turn", player2.getId());
+            } else {    
+                message.put("turn", player1.getId());
+            }
 
+            message.put("flipped", player2.getId());
+            sendMessage(player1, message);
+            sendMessage(player2, message);
+        } else {
+            message.put("turn", player1.getId());
+            if(color == false) {
+                message.put("flipped", player1.getId());
+            }
+            sendMessage(player1, message);
+        }
+    }
+
+    public void handleMessage(JSONObject json, WebSocketSession session) {
+        String desc = json.getString("desc");
+        JSONObject message = null;
+        
         if("move request".equals(desc)) {
             JSONArray values = json.getJSONArray("crd");
-            return game.handleCrdInput(values);
+            message = game.handleCrdInput(values);
+        } else if("undo".equals(desc)) {
+            message = game.handleUndo();
+        } else {
+            return;
         }
-        if("undo move".equals(desc)) {
-            return game.handleUndo();
-        }
-
-        return "Invalid message or request";
+        refresh(game, message);
     }
 
-    //Cleanup process
-    public void handleClosedConnection() {
-        
+    public void sendMessage(WebSocketSession session, JSONObject message) {
+        try {
+            String res = message.toString();
+            System.out.println(res);
+            session.sendMessage(new TextMessage(res));
+        } catch(Exception e) {
+            System.out.println("board state sending failed.");
+        }
     }
 
-    public GameController(String player1, String player2) {
-        this.player1 = player1;
-        this.player2 = player2;
+    public GameController(WebSocketSession player1, WebSocketSession player2) {
         this.color = rand.nextBoolean();
+        if(color) {
+            this.player1 = player2;
+            this.player2 = player1;
+        } else {
+            this.player1 = player1;
+            this.player2 = player2;
+        }
         this.isMulti = true;
     }
 
-    public GameController(String player, boolean color) {
+    public GameController(WebSocketSession player, boolean color) {
        this.player1 = player;
        this.player2 = null;
        this.color = color;
