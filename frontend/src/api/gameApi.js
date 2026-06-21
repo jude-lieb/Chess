@@ -1,7 +1,15 @@
 import axios from "axios"
 
+let source = null
+
+if(window.location.hostname === "judelieb.com") {
+    source = "https://judelieb.com/"
+} else {
+    source = "http://localhost:5000/"
+}
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/'
+    baseURL: source
 })
 
 export default {
