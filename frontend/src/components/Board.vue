@@ -17,11 +17,16 @@ const images = [
 </script>
 
 <template>
-  <div id="board" class="grid-container mt-1">
-    <div v-for="i in 64" class="grid-item" :key="i">
-      <img :class="outlines[getSquare(i-1)]" @click="emit('select', getSquare(i-1))" :src="'/images/'+(images[board[getSquare(i-1)]] || 'blank.jpg')" draggable="false" />
+  <div class="card">
+    <div class="card-body">
+      <div id="board" class="grid-container">
+        <div v-for="i in 64" class="grid-item" :key="i">
+          <img :class="outlines[getSquare(i-1)]" @click="emit('select', getSquare(i-1))" :src="'/images/'+(images[board[getSquare(i-1)]] || 'blank.jpg')" draggable="false" />
+        </div>
+      </div>
     </div>
   </div>
+  
 </template>
 
 <style scoped>

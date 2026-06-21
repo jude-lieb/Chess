@@ -3,6 +3,7 @@ import Panel from './Panel.vue'
 import Board from './Board.vue'
 import {ref} from 'vue'
 import PromoteModal from './PromoteModal.vue'
+import gameApi from '@/api/gameApi.js'
 
 const deployed = window.location.hostname === "judelieb.com"
 let socket = null
@@ -11,13 +12,16 @@ const info = ref({
   wMat: null,
   bMat: null,
   moveCount: null,
-  gameStatus: '',
+  gameStatus: 'Pregame',
   autoQueen: true,
-  player: true
+  player: true,
+  isMulti: true,
+  isLoading: null,
 })
-
+const defaultBoard = [10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4]
 const options = ref([])
-const board = ref([])
+const board = ref(defaultBoard)
 const outlines = ref([])
 const isFlipped = ref(false)
 const showModal = ref(false)
@@ -25,16 +29,26 @@ let lights = []
 
 //Move selection states (mode = start/end, crd = start, box = end)
 let mode = true
-let crd = -1
+let crd = null
 let box = -1
+let sessionId = null
+let turn = false
+let started = false
+
+//Preventing websocket closure
+setInterval(() => {
+    if(socket !== undefined && socket !== null) {
+      if(socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ desc: "ping" }))
+      //console.log("socket ping sent")
+    }
+  }
+}, 60000)
 
 function getWebSocket() {
   let newSocket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
 
-  newSocket.onopen = () => {
-    console.log("Web socket connected.")
-    newSocket.send(JSON.stringify({ desc: "new", player: info.value.player }))
-  }
+  newSocket.onopen = () => {console.log("Web socket connected.")}
   newSocket.onclose = () => {console.log("Web socket disconnected.")}
   newSocket.onerror = (error) => {console.log("Web socket error:", error)}
 
@@ -42,7 +56,11 @@ function getWebSocket() {
     try {
       const data = JSON.parse(event.data)
       if(data.desc === "boardState") {
+        if(started === false) {
+          info.value.isLoading = null
+        }
         if(data.highlights !== "none") {
+          outlines.value = []
           lights = data.highlights
         } else {
           lights = []
@@ -50,12 +68,20 @@ function getWebSocket() {
         resetLights()
         board.value = data.squares
         options.value = data.options
-        isFlipped.value = !data.turn
+        turn = data.turn
+        
+        isFlipped.value = (data.flipped === sessionId)
         info.value.gameStatus = data.status
         info.value.moveCount = data.moveCount
         info.value.wMat = data.wMat
         info.value.bMat = data.bMat
       }
+      if(data.desc === "sessionId") {
+        sessionId = data.sessionId
+        gameRequest(sessionId)
+      }
+      console.log(data)
+      //console.log(data)
     } catch (error) {
       console.log("Error handling server input", error)
     }
@@ -68,24 +94,35 @@ function resetLights() {
   outlines.value[lights[1]] = 'yellow-highlight'
 }
 
-//Preventing websocket closure
-setInterval(() => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ desc: "ping" }))
-  }
-}, 60000)
-
 function undo() {
   outlines.value = []
   socket.send(JSON.stringify({ desc: "undo" }))
 }
 
 function newGame() {
-  socket.close()
+  if(socket != null && socket != undefined) socket.close()
   socket = getWebSocket()
   mode = true
   options.value = []
   outlines.value = []
+  started = false
+  board.value = defaultBoard
+  info.value.isLoading = true
+}
+
+async function gameRequest(sessionId) {
+  try {
+    let res = "nothing returned"
+    if(info.value.isMulti) {
+      res = await gameApi.multiplayer(sessionId)
+      info.value.gameStatus = res.data
+    } else {
+      res = await gameApi.singleplayer(sessionId, info.value.player)
+    }
+    console.log(res)
+  } catch(e) {
+    console.log('haha', e)
+  }
 }
 
 function handlePromote(type) {
@@ -104,10 +141,21 @@ function cancelMove() {
   showModal.value = false
 }
 
+function changeGameType() {
+  info.value.isMulti = !info.value.isMulti
+}
+
 function handleSelect(selected) {
-  if (mode === true) {
+  if(turn !== sessionId) return
+
+  if(mode === true) {
+    
     crd = selected
+    outlines.value = []
+    resetLights()
+
     outlines.value[selected] = 'green-outline'
+    if(turn !== sessionId) return
     if (options.value[selected] !== undefined && options.value[selected] !== null) {
       for (let i = 0; i < options.value[selected].length; i++) {
         outlines.value[options.value[selected][i]] = 'red-outline'
@@ -159,13 +207,10 @@ function handleSelect(selected) {
   }
 }
 
-//Starting a default game as white
-socket = getWebSocket()
-
 </script>
 
 <template>
-  <div class="container">
+  <div class="container mt-1">
     <main class="d-flex flex-column flex-md-row align-items-center align-items-md-start justify-content-center gap-3 w-100">
         <Board @select="handleSelect" :board :outlines :isFlipped></Board>
         <Panel 
@@ -173,6 +218,7 @@ socket = getWebSocket()
           @newGame="newGame" 
           @undo="undo" 
           @auto-queen="info.autoQueen = !info.autoQueen"
+          @game-type="changeGameType"
           @changeColor="info.player = !info.player">
         </Panel>
         <PromoteModal :showModal @pick="handlePromote" @cancel="cancelMove"></PromoteModal>
