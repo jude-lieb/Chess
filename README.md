@@ -9,9 +9,5 @@ Developer: Jude Lieb
 Start date: 06/2023
 
 This has a bare-bones move response system that chooses a legal move to play based on material totals at a low depth. 
-Websockets are used to connect the java server to the node app and the node app to the client.
-A Cloudflare tunnel is used to secure my local server machine.
-
-
-
-
+Websockets are used to connect the Java server to the clients. 
+Multiplayer mode and Computer mode are both available.
