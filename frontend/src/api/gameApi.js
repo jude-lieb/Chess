@@ -3,7 +3,7 @@ import axios from "axios"
 let source = null
 
 if(window.location.hostname === "judelieb.com") {
-    source = "https://judelieb.com/"
+    source = "https://api.judelieb.com/"
 } else {
     source = "http://localhost:5000/"
 }
