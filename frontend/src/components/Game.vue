@@ -18,10 +18,10 @@ const info = ref({
   isMulti: true,
   isLoading: null,
 })
-
+const defaultBoard = [10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4]
 const options = ref([])
-const board = ref([10,8,9,11,12,9,8,10,7,7,7,7,7,7,7,7,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,4,2,3,5,6,3,2,4])
+const board = ref(defaultBoard)
 const outlines = ref([])
 const isFlipped = ref(false)
 const showModal = ref(false)
@@ -34,6 +34,16 @@ let box = -1
 let sessionId = null
 let turn = false
 let started = false
+
+//Preventing websocket closure
+setInterval(() => {
+    if(socket !== undefined && socket !== null) {
+      if(socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ desc: "ping" }))
+      //console.log("socket ping sent")
+    }
+  }
+}, 60000)
 
 function getWebSocket() {
   let newSocket = new WebSocket(deployed ? "wss://api.judelieb.com/ws" : "ws://localhost:5000/ws")
@@ -76,14 +86,6 @@ function getWebSocket() {
       console.log("Error handling server input", error)
     }
   }
-
-  //Preventing websocket closure
-  setInterval(() => {
-    if (socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ desc: "ping" }))
-    }
-  }, 60000)
-
   return newSocket
 }
 
@@ -104,6 +106,7 @@ function newGame() {
   options.value = []
   outlines.value = []
   started = false
+  board.value = defaultBoard
   info.value.isLoading = true
 }
 
@@ -207,7 +210,7 @@ function handleSelect(selected) {
 </script>
 
 <template>
-  <div class="container">
+  <div class="container mt-1">
     <main class="d-flex flex-column flex-md-row align-items-center align-items-md-start justify-content-center gap-3 w-100">
         <Board @select="handleSelect" :board :outlines :isFlipped></Board>
         <Panel 

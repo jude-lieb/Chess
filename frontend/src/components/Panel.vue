@@ -65,7 +65,7 @@ const emit = defineEmits(['newGame','undo', 'autoQueen', 'changeColor','game-typ
             <div class="d-flex flex-row gap-3">
                 <button @click="emit('newGame')" class="btn btn-danger">🔁 New</button>
                 <button v-if="!info.isMulti" @click="emit('undo')" class="btn btn-primary">↩️ Undo</button>
-                <span v-if="info.isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span v-if="info.isLoading" class="spinner-border" role="status" aria-hidden="true"></span>
             </div>
         </li>
     </ul>
